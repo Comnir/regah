@@ -3,11 +3,14 @@ package com.jefferson.regah;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedWriter;
 import java.io.File;
-import java.util.List;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 
 public class SharedResourcesTests {
     @Test
@@ -61,7 +64,9 @@ public class SharedResourcesTests {
         sharedResources.share(folder);
 
         final Set<File> expected = Set.of(
+                new File(this.getClass().getResource("/sharedFoldersBasicSharingTest").getFile()),
                 new File(this.getClass().getResource("/sharedFoldersBasicSharingTest/ForSharing.txt").getFile()),
+                new File(this.getClass().getResource("/sharedFoldersBasicSharingTest/subFolder").getFile()),
                 new File(this.getClass().getResource("/sharedFoldersBasicSharingTest/subFolder/subFile1.txt").getFile()),
                 new File(this.getClass().getResource("/sharedFoldersBasicSharingTest/subFolder/subFile2.txt").getFile())
         );
@@ -71,8 +76,13 @@ public class SharedResourcesTests {
                 .filter(actual -> !actuallyShared.contains(actual))
                 .map(File::getPath)
                 .collect(Collectors.joining(","));
+        final String extraFiles = actuallyShared.stream()
+                .filter(actual -> !expected.contains(actual))
+                .map(File::getPath)
+                .collect(Collectors.joining(","));
 
         Assertions.assertEquals(expected.size(), actuallyShared.size(),
-                "Shared folder doesn't match the actually shared files. Missing files: " + missingFiles);
+                "Shared folder doesn't match the actually shared files. Missing files: " + missingFiles
+                        + System.lineSeparator() + "Extra files: " + extraFiles);
     }
 }
