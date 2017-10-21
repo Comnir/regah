@@ -48,7 +48,7 @@ public class InvestigateTorrenting {
                              final int seedTime) throws IOException, NoSuchAlgorithmException {
         final SharedTorrent torrent = SharedTorrent.fromFile(torrentFile, parentOfShared);
         Client client = new Client(localAddress, torrent);
-
+        log.info("Seeder# listening on " + client.getPeerSpec());
         client.addObserver((observable, data) -> {
             Client client1 = (Client) observable;
             float progress = client1.getTorrent().getCompletion();
@@ -67,6 +67,7 @@ public class InvestigateTorrenting {
     private void downloadTorrent(final File torrentFile, final File destination) throws IOException, NoSuchAlgorithmException {
         final SharedTorrent torrent = SharedTorrent.fromFile(torrentFile, destination);
         Client client = new Client(localAddress, torrent);
+        log.info("Seeder# listening on " + client.getPeerSpec());
 
         client.addObserver((observable, data) -> {
             Client client1 = (Client) observable;
@@ -133,6 +134,9 @@ public class InvestigateTorrenting {
                 log.error("IO Exception in tracker", e);
             } catch (NoSuchAlgorithmException e) {
                log.error("Internal error in tracker", e);
+            } catch (Exception e) {
+                log.error("Error in tracker", e);
+                throw e;
             }
         });
 
@@ -143,10 +147,15 @@ public class InvestigateTorrenting {
                 log.error("IO Exception in tracker", e);
             } catch (NoSuchAlgorithmException e) {
                 log.error("Internal error in seeder", e);
+            } catch (Exception e) {
+                log.error("Error in seeder", e);
+                throw e;
             }
         });
 
-        final File tempDestination = torrentFile.getParentFile();
+        final File tempDestination = new File(torrentFile.getParentFile(), "downloadedTorrent");
+        tempDestination.mkdir();
+        tempDestination.deleteOnExit();
         executorService.submit(() -> {
             try {
                 investigator.downloadTorrent(torrentFile, tempDestination);
@@ -154,6 +163,9 @@ public class InvestigateTorrenting {
                 log.error("IO Exception in tracker", e);
             } catch (NoSuchAlgorithmException e) {
                 log.error("Internal error in seeder", e);
+            } catch (Exception e) {
+                log.error("Error in downloader", e);
+                throw e;
             }
         });
 
