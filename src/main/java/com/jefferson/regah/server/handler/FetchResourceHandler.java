@@ -37,11 +37,7 @@ public class FetchResourceHandler implements HttpHandler {
                     HttpConstants.ERROR_REASON,
                     "Invalid request format!"));
 
-            exchange.getResponseHeaders().add(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON);
-            exchange.sendResponseHeaders(400, responseJson.length());
-            final OutputStream os = exchange.getResponseBody();
-            os.write(responseJson.getBytes(StandardCharsets.UTF_8));
-            os.flush();
+            sendResponse(exchange, responseJson, 400);
             return;
         }
 
@@ -59,17 +55,17 @@ public class FetchResourceHandler implements HttpHandler {
                     HttpConstants.ERROR_REASON,
                     "Requested file is not shared!"));
 
-            exchange.getResponseHeaders().add(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON);
-            exchange.sendResponseHeaders(400, responseJson.length());
-            final OutputStream os = exchange.getResponseBody();
-            os.write(responseJson.getBytes(StandardCharsets.UTF_8));
-            os.flush();
+            sendResponse(exchange, responseJson, 400);
             return;
         }
 
         final String responseJson = transporter.getCommunicationInfoFor(file).asJson();
+        sendResponse(exchange, responseJson, 200);
+    }
+
+    private void sendResponse(HttpExchange exchange, String responseJson, int responseCode) throws IOException {
         exchange.getResponseHeaders().add(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON);
-        exchange.sendResponseHeaders(200, responseJson.length());
+        exchange.sendResponseHeaders(responseCode, responseJson.length());
         final OutputStream os = exchange.getResponseBody();
         os.write(responseJson.getBytes(StandardCharsets.UTF_8));
         os.flush();
