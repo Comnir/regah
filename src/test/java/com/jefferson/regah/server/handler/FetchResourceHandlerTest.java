@@ -111,10 +111,8 @@ class FetchResourceHandlerTest {
 
     @Test
     void transportDataIsReturned() throws IOException {
-        final String path = this.getClass().getResource("/share/ForSharing.txt").getPath();
-        Mockito.when(sharedResources.isShared(new File(path))).thenReturn(true);
-
-        final Map<String, String> parameters = Map.of(FetchResourceHandler.FILE_PATH_PARAMETER, path);
+        Mockito.when(sharedResources.isShared(Mockito.any())).thenReturn(true);
+        final Map<String, String> parameters = Map.of(FetchResourceHandler.FILE_PATH_PARAMETER, "");
 
         final InputStream inputStream = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         Mockito.when(exchange.getRequestBody()).thenReturn(inputStream);
