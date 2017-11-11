@@ -1,20 +1,30 @@
 package com.jefferson.regah.server.handler;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
+import com.jefferson.regah.server.transport.Transporter;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 public class FetchResourceHandler implements HttpHandler {
     private static final Logger log = LogManager.getLogger(FetchResourceHandler.class);
+    private final static Gson gson = new Gson();
+
+    static final String FILE_PATH_PARAMETER = "filePath";
 
     private final SharedResources sharedResources;
+    private final Transporter transporter;
 
-    public FetchResourceHandler(SharedResources sharedResources) {
+    public FetchResourceHandler(SharedResources sharedResources, Transporter transporter) {
         this.sharedResources = sharedResources;
+        this.transporter = transporter;
     }
 
     @Override
@@ -22,8 +32,46 @@ public class FetchResourceHandler implements HttpHandler {
         log.info("Fetch resources request");
         log.debug("Headers: " + exchange.getRequestHeaders());
 
-        // TODO: implement
+        if (!HttpConstants.APPLICATION_JSON.equals(exchange.getRequestHeaders().getFirst(HttpConstants.CONTENT_TYPE))) {
+            final String responseJson = gson.toJson(Map.of(
+                    HttpConstants.ERROR_REASON,
+                    "Invalid request format!"));
 
-        exchange.sendResponseHeaders(200, 0);
+            exchange.getResponseHeaders().add(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON);
+            exchange.sendResponseHeaders(400, responseJson.length());
+            final OutputStream os = exchange.getResponseBody();
+            os.write(responseJson.getBytes(StandardCharsets.UTF_8));
+            os.flush();
+            return;
+        }
+
+        final StringBuilder stringBuilder = new StringBuilder();
+        try (final BufferedReader bufferedReader = new BufferedReader(
+                new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8))) {
+            stringBuilder.append(bufferedReader.readLine());
+        }
+        final Map<String, String> parameters = gson.fromJson(stringBuilder.toString(),
+                TypeToken.getParameterized(Map.class, String.class, String.class).getType());
+        final File file = new File(parameters.get(FILE_PATH_PARAMETER));
+
+        if (!sharedResources.isShared(file)) {
+            final String responseJson = gson.toJson(Map.of(
+                    HttpConstants.ERROR_REASON,
+                    "Requested file is not shared!"));
+
+            exchange.getResponseHeaders().add(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON);
+            exchange.sendResponseHeaders(400, responseJson.length());
+            final OutputStream os = exchange.getResponseBody();
+            os.write(responseJson.getBytes(StandardCharsets.UTF_8));
+            os.flush();
+            return;
+        }
+
+        final String responseJson = transporter.getCommunicationInfoFor(file).asJson();
+        exchange.getResponseHeaders().add(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON);
+        exchange.sendResponseHeaders(200, responseJson.length());
+        final OutputStream os = exchange.getResponseBody();
+        os.write(responseJson.getBytes(StandardCharsets.UTF_8));
+        os.flush();
     }
 }
