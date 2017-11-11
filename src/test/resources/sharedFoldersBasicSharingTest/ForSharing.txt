@@ -1,1 +1,0 @@
-A file for sharing in tests.

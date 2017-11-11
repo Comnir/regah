@@ -37,4 +37,8 @@ public class SharedResources {
     public void unshare(File file) {
         resources.remove(file);
     }
+
+    public boolean isShared(File file) {
+        return resources.contains(file);
+    }
 }

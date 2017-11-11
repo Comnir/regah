@@ -7,9 +7,9 @@ import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
 public class ListResourcesHandler implements HttpHandler {
@@ -33,7 +33,7 @@ public class ListResourcesHandler implements HttpHandler {
         exchange.getResponseHeaders().add("Content-type", "application/json");
         exchange.sendResponseHeaders(200, response.length());
         try (OutputStream os = exchange.getResponseBody()) {
-            os.write(response.getBytes());
+            os.write(response.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             log.error("Error while writing response", e);
         }
