@@ -132,26 +132,17 @@ public class InvestigateTorrenting {
         executor.submit(() -> {
             try {
                 investigator.runTrackerSharingTorrent(torrentFile);
-            } catch (IOException e) {
-                log.error("IO Exception in tracker", e);
-            } catch (NoSuchAlgorithmException e) {
-               log.error("Internal error in tracker", e);
             } catch (Exception e) {
                 log.error("Error in tracker", e);
-                throw e;
+                throw new RuntimeException("Error in tracker", e);
             }
         });
 
         executor.submit(() -> {
             try {
                 investigator.seedTorrent(torrentFile, sharedFile.getParentFile(), 300);
-            } catch (IOException e) {
-                log.error("IO Exception in tracker", e);
-            } catch (NoSuchAlgorithmException e) {
-                log.error("Internal error in seeder", e);
             } catch (Exception e) {
-                log.error("Error in seeder", e);
-                throw e;
+                throw new RuntimeException("Error in seeder", e);
             }
         });
 
@@ -161,13 +152,9 @@ public class InvestigateTorrenting {
         executor.submit(() -> {
             try {
                 investigator.downloadTorrent(torrentFile, tempDestination);
-            } catch (IOException e) {
-                log.error("IO Exception in tracker", e);
-            } catch (NoSuchAlgorithmException e) {
-                log.error("Internal error in seeder", e);
             } catch (Exception e) {
                 log.error("Error in downloader", e);
-                throw e;
+                throw new RuntimeException("Error in downloader", e);
             }
         });
 

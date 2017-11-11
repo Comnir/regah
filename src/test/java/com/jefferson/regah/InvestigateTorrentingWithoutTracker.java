@@ -35,7 +35,7 @@ public class InvestigateTorrentingWithoutTracker {
     private InvestigateTorrentingWithoutTracker(String ip) throws UnknownHostException {
         this.localAddress = InetAddress.getByName(ip);
         downloaderIsDone = new AtomicBoolean(false);
-        seedingPeerQ = new LinkedBlockingQueue(1);
+        seedingPeerQ = new LinkedBlockingQueue<>(1);
     }
 
     private void createTorrentFile(final File sharedPath, final File outputTorrent)
@@ -68,7 +68,8 @@ public class InvestigateTorrentingWithoutTracker {
         log.debug("Seeder# is Done");
     }
 
-    private void downloadTorrent(final File torrentFile, final File destination) throws IOException, NoSuchAlgorithmException {
+    private void downloadTorrent(final File torrentFile, final File destination)
+            throws IOException, NoSuchAlgorithmException {
         log.debug("Download to " + destination + "; exists: " + destination.exists());
         final SharedTorrent torrent = SharedTorrent.fromFile(torrentFile, destination);
         Client client = new Client(localAddress, torrent);
@@ -146,13 +147,8 @@ public class InvestigateTorrentingWithoutTracker {
         executor.submit(() -> {
             try {
                 investigator.seedTorrent(torrentFile, sharedFile.getParentFile(), 300);
-            } catch (IOException e) {
-                log.error("IO Exception in tracker", e);
-            } catch (NoSuchAlgorithmException e) {
-                log.error("Internal error in seeder", e);
             } catch (Exception e) {
-                log.error("Error in seeder", e);
-                throw e;
+                throw new RuntimeException("Error in seeder", e);
             }
         });
 
@@ -162,13 +158,8 @@ public class InvestigateTorrentingWithoutTracker {
         executor.submit(() -> {
             try {
                 investigator.downloadTorrent(torrentFile, tempDestination);
-            } catch (IOException e) {
-                log.error("IO Exception in tracker", e);
-            } catch (NoSuchAlgorithmException e) {
-                log.error("Internal error in seeder", e);
             } catch (Exception e) {
-                log.error("Error in downloader", e);
-                throw e;
+                throw new RuntimeException("Error in downloader", e);
             }
         });
 
