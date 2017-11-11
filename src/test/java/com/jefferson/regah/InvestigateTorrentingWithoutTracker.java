@@ -1,5 +1,6 @@
 package com.jefferson.regah;
 
+import com.jefferson.regah.dto.PeerDto;
 import com.turn.ttorrent.client.Client;
 import com.turn.ttorrent.client.SharedTorrent;
 import com.turn.ttorrent.common.Peer;
@@ -11,30 +12,30 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class InvestigateTorrentingWithoutTracker {
     private static final Logger log = LogManager.getLogger(InvestigateTorrentingWithoutTracker.class);
 
     private final InetAddress localAddress;
     private final AtomicBoolean downloaderIsDone;
-    private final AtomicReference<Peer> seedingPeer;
+    private final BlockingQueue<Peer> seedingPeerQ;
 
-    private InvestigateTorrentingWithoutTracker(String ip) throws URISyntaxException, UnknownHostException {
+    private InvestigateTorrentingWithoutTracker(String ip) throws UnknownHostException {
         this.localAddress = InetAddress.getByName(ip);
         downloaderIsDone = new AtomicBoolean(false);
-        seedingPeer = new AtomicReference<>();
+        seedingPeerQ = new LinkedBlockingQueue(1);
     }
 
     private void createTorrentFile(final File sharedPath, final File outputTorrent)
@@ -50,10 +51,8 @@ public class InvestigateTorrentingWithoutTracker {
         final SharedTorrent torrent = SharedTorrent.fromFile(torrentFile, parentOfShared);
         Client client = new Client(localAddress, torrent);
         log.info("Seeder# listening on " + client.getPeerSpec());
-        synchronized (seedingPeer) {
-            seedingPeer.set(client.getPeerSpec());
-            seedingPeer.notifyAll();
-        }
+        seedingPeerQ.add(client.getPeerSpec());
+
         client.addObserver((observable, data) -> {
             Client client1 = (Client) observable;
             float progress = client1.getTorrent().getCompletion();
@@ -84,29 +83,32 @@ public class InvestigateTorrentingWithoutTracker {
         log.info("donwloader# starts download");
         client.download();
 
-        synchronized (seedingPeer) {
-            while (null == seedingPeer.get()) {
-                try {
-                    seedingPeer.wait();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-        log.info("downloader# got peer " + seedingPeer.get());
-        final Peer seederLocalPeer =  seedingPeer.get();
-        final Peer seederPeerForRemote = new Peer(new InetSocketAddress(seederLocalPeer.getAddress(), seederLocalPeer.getPort()));
         while (!client.readyForConnection()) {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                log.error("Interrupted!");
+                log.error("donwloader# Interrupted!");
                 Thread.interrupted();
             }
         }
         log.info("downloader# connection handler is ready!");
 
-        client.handleDiscoveredPeers(Arrays.asList(seederPeerForRemote));
+        final Peer seederLocalPeer;
+        try {
+            seederLocalPeer = seedingPeerQ.take();
+        } catch (InterruptedException e) {
+            log.error("downloader# was interrupted while waiting for peer!");
+            Thread.currentThread().interrupt();
+            return;
+        }
+
+        log.info("downloader# got peer " + seederLocalPeer);
+
+        final String jsonRemotePeer = PeerDto.peerToJson(seederLocalPeer);
+        log.info("Peer as json:" + jsonRemotePeer);
+        final Peer seederPeerForRemote = PeerDto.jsonToPeer(jsonRemotePeer);
+
+        client.handleDiscoveredPeers(List.of(seederPeerForRemote));
         client.waitForCompletion();
         downloaderIsDone.set(true);
         log.debug("Downloader# is stopping");
@@ -124,14 +126,12 @@ public class InvestigateTorrentingWithoutTracker {
         }
     }
 
-    public static void main(String[] args) throws URISyntaxException, IOException, NoSuchAlgorithmException, InterruptedException {
+    public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InterruptedException {
         final InvestigateTorrentingWithoutTracker investigator = new InvestigateTorrentingWithoutTracker("127.0.0.1");
-
-        ExecutorService executorService = Executors.newCachedThreadPool();
 
         final File sharedFile = File.createTempFile("sharedFile", "txt", null);
         final Path source = Paths.get(investigator.getClass()
-                .getResource("/sharedFoldersBasicSharingTest/ForSharing.txt")
+                .getResource("/share/ForSharing.txt")
                 .getPath());
         Files.copy(source, sharedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         sharedFile.deleteOnExit();
@@ -141,7 +141,9 @@ public class InvestigateTorrentingWithoutTracker {
 
         investigator.createTorrentFile(sharedFile, torrentFile);
 
-        executorService.submit(() -> {
+        final CompletingExecutor executor = new CompletingExecutor();
+
+        executor.submit(() -> {
             try {
                 investigator.seedTorrent(torrentFile, sharedFile.getParentFile(), 300);
             } catch (IOException e) {
@@ -157,7 +159,7 @@ public class InvestigateTorrentingWithoutTracker {
         final File tempDestination = new File(torrentFile.getParentFile(), "downloadedTorrent");
         tempDestination.mkdir();
         tempDestination.deleteOnExit();
-        executorService.submit(() -> {
+        executor.submit(() -> {
             try {
                 investigator.downloadTorrent(torrentFile, tempDestination);
             } catch (IOException e) {
@@ -170,17 +172,8 @@ public class InvestigateTorrentingWithoutTracker {
             }
         });
 
-        investigator.waitForDownloader();
-        log.info("Main# downloader finished, shutting down executor");
-        executorService.shutdown();
-        final int waitSeconds = 15;
-        if (!executorService.awaitTermination(waitSeconds, TimeUnit.SECONDS)) {
-            log.info("Main# executor didn't shutdown after " + waitSeconds + " seconds");
-            executorService.shutdownNow();
-            if (!executorService.awaitTermination(waitSeconds, TimeUnit.SECONDS)) {
-                log.warn("Some tasks didn't finish while trying to shutdown!");
-            }
-        }
+        executor.shutdownWhenComplete();
+
         log.info("Main# is done");
     }
 }

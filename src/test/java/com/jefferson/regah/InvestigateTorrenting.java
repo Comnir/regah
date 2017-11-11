@@ -13,10 +13,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.*;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -113,11 +114,10 @@ public class InvestigateTorrenting {
     public static void main(String[] args) throws URISyntaxException, IOException, NoSuchAlgorithmException, InterruptedException {
         final InvestigateTorrenting investigator = new InvestigateTorrenting("127.0.0.1", 9000);
 
-        ExecutorService executorService = Executors.newCachedThreadPool();
 
         final File sharedFile = File.createTempFile("sharedFile", "txt", null);
         final Path source = Paths.get(investigator.getClass()
-                .getResource("/sharedFoldersBasicSharingTest/ForSharing.txt")
+                .getResource("/share/ForSharing.txt")
                 .getPath());
         Files.copy(source, sharedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         sharedFile.deleteOnExit();
@@ -127,7 +127,9 @@ public class InvestigateTorrenting {
 
         investigator.createTorrentFile(sharedFile, torrentFile);
 
-        executorService.submit(() -> {
+        final CompletingExecutor executor = new CompletingExecutor();
+
+        executor.submit(() -> {
             try {
                 investigator.runTrackerSharingTorrent(torrentFile);
             } catch (IOException e) {
@@ -140,7 +142,7 @@ public class InvestigateTorrenting {
             }
         });
 
-        executorService.submit(() -> {
+        executor.submit(() -> {
             try {
                 investigator.seedTorrent(torrentFile, sharedFile.getParentFile(), 300);
             } catch (IOException e) {
@@ -156,7 +158,7 @@ public class InvestigateTorrenting {
         final File tempDestination = new File(torrentFile.getParentFile(), "downloadedTorrent");
         tempDestination.mkdir();
         tempDestination.deleteOnExit();
-        executorService.submit(() -> {
+        executor.submit(() -> {
             try {
                 investigator.downloadTorrent(torrentFile, tempDestination);
             } catch (IOException e) {
@@ -169,17 +171,7 @@ public class InvestigateTorrenting {
             }
         });
 
-        investigator.waitForDownloader();
-        log.info("Main# downloader finished, shutting down executor");
-        executorService.shutdown();
-        final int waitSeconds = 15;
-        if (!executorService.awaitTermination(waitSeconds, TimeUnit.SECONDS)) {
-            log.info("Main# executor didn't shutdown after " + waitSeconds + " seconds");
-            executorService.shutdownNow();
-            if (!executorService.awaitTermination(waitSeconds, TimeUnit.SECONDS)) {
-                log.warn("Some tasks didn't finish while trying to shutdown!");
-            }
-        }
+        executor.shutdownWhenComplete();
         log.info("Main# is done");
     }
 }
