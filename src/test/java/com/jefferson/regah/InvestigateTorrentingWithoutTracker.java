@@ -55,8 +55,9 @@ public class InvestigateTorrentingWithoutTracker {
 
         client.addObserver((observable, data) -> {
             Client client1 = (Client) observable;
+            Client.ClientState state = (Client.ClientState) data;
             float progress = client1.getTorrent().getCompletion();
-            log.debug("Seeder# Progress update: " + progress);
+            log.debug("Seeder# State:" + state + " Progress update: " + progress);
         });
 
         log.info("seeder# starts seeding");
@@ -73,15 +74,16 @@ public class InvestigateTorrentingWithoutTracker {
         log.debug("Download to " + destination + "; exists: " + destination.exists());
         final SharedTorrent torrent = SharedTorrent.fromFile(torrentFile, destination);
         Client client = new Client(localAddress, torrent);
-        log.info("Seeder# listening on " + client.getPeerSpec());
+        log.info("Downloader# got seeder listening on " + client.getPeerSpec());
 
         client.addObserver((observable, data) -> {
             Client client1 = (Client) observable;
+            Client.ClientState state = (Client.ClientState) data;
             float progress = client1.getTorrent().getCompletion();
-            log.debug("Downloader# Progress update: " + progress);
+            log.debug("Downloader# State:" + state + " Progress update: " + progress);
         });
 
-        log.info("donwloader# starts download");
+        log.info("downloader# starts download");
         client.download();
 
         while (!client.readyForConnection()) {
@@ -90,6 +92,7 @@ public class InvestigateTorrentingWithoutTracker {
             } catch (InterruptedException e) {
                 log.error("donwloader# Interrupted!");
                 Thread.interrupted();
+                return;
             }
         }
         log.info("downloader# connection handler is ready!");
@@ -122,7 +125,8 @@ public class InvestigateTorrentingWithoutTracker {
             try {
                 Thread.sleep(TimeUnit.SECONDS.toMillis(10));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.warn("Interrupted while waiting for downloader!");
+                return;
             }
         }
     }
