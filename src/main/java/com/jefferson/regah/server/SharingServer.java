@@ -3,6 +3,7 @@ package com.jefferson.regah.server;
 import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.server.handler.FetchResourceHandler;
 import com.jefferson.regah.server.handler.ListResourcesHandler;
+import com.jefferson.regah.server.transport.TorrentTransporter;
 import com.jefferson.regah.server.transport.Transporter;
 import com.sun.net.httpserver.HttpServer;
 import org.apache.logging.log4j.LogManager;
@@ -27,7 +28,7 @@ public class SharingServer {
 
     public void start() {
         try {
-            final Transporter transporter = null; // TODO: assign, after creating a concrete implementation
+            final Transporter transporter = new TorrentTransporter();
             final HttpServer httpServer = HttpServer.create(new InetSocketAddress(serverPort), 10);
 
             httpServer.createContext("/listShared", new ListResourcesHandler(sharedResources));

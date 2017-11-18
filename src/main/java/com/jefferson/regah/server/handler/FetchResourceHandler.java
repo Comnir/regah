@@ -3,6 +3,7 @@ package com.jefferson.regah.server.handler;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
+import com.jefferson.regah.server.transport.FailureToPrepareForDownload;
 import com.jefferson.regah.server.transport.Transporter;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -59,8 +60,16 @@ public class FetchResourceHandler implements HttpHandler {
             return;
         }
 
-        final String responseJson = transporter.getCommunicationInfoFor(file).asJson();
-        sendResponse(exchange, responseJson, 200);
+        try {
+            final String responseJson = transporter.getDownloadInfoFor(file).asJson();
+            sendResponse(exchange, responseJson, 200);
+        } catch (FailureToPrepareForDownload e) {
+            final String responseJson = gson.toJson(Map.of(
+                    HttpConstants.ERROR_REASON,
+                    "Failed to prepare requested file for download. " + e.getMessage()));
+
+            sendResponse(exchange, responseJson, 503);
+        }
     }
 
     private void sendResponse(HttpExchange exchange, String responseJson, int responseCode) throws IOException {
