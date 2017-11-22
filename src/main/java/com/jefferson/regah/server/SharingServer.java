@@ -26,25 +26,24 @@ public class SharingServer {
         this.sharedResources = sharedResources;
     }
 
-    public void start() {
-        try {
-            final Transporter transporter = new TorrentTransporter();
-            final HttpServer httpServer = HttpServer.create(new InetSocketAddress(serverPort), 10);
+    public void start() throws IOException {
+        Runtime.getRuntime()
+                .addShutdownHook(new Thread(this::shutdown));
 
-            httpServer.createContext("/listShared", new ListResourcesHandler(sharedResources));
-            httpServer.createContext("/fetchResources", new FetchResourceHandler(sharedResources, transporter));
+        final Transporter transporter = new TorrentTransporter();
+        final HttpServer httpServer = HttpServer.create(new InetSocketAddress(serverPort), 10);
 
-            httpServer.setExecutor(executor);
+        httpServer.createContext("/listShared", new ListResourcesHandler(sharedResources));
+        httpServer.createContext("/fetchResources", new FetchResourceHandler(sharedResources, transporter));
 
-            httpServer.start();
+        httpServer.setExecutor(executor);
 
-            log.info("Sharing server was started on port " + serverPort);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        httpServer.start();
+
+        log.info("Sharing server was started on port " + serverPort);
     }
 
-    public void shutdown() {
+    private void shutdown() {
         log.info("Shutting down server - will wait a bit for running requests to finish");
         executor.shutdown(); // Disable new tasks from being submitted
             try {
