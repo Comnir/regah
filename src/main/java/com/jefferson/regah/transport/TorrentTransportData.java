@@ -1,4 +1,4 @@
-package com.jefferson.regah.server.transport;
+package com.jefferson.regah.transport;
 
 import com.google.gson.Gson;
 import com.jefferson.regah.dto.PeerDto;

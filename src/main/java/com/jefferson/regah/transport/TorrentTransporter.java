@@ -1,4 +1,4 @@
-package com.jefferson.regah.server.transport;
+package com.jefferson.regah.transport;
 
 import com.turn.ttorrent.client.Client;
 import com.turn.ttorrent.client.SharedTorrent;

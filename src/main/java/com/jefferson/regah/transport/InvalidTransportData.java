@@ -1,4 +1,4 @@
-package com.jefferson.regah.server.transport;
+package com.jefferson.regah.transport;
 
 class InvalidTransportData extends Exception {
     InvalidTransportData(String message, Throwable cause) {

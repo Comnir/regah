@@ -1,4 +1,4 @@
-package com.jefferson.regah.server.transport;
+package com.jefferson.regah.transport;
 
 public class FailureToPrepareForDownload extends Exception {
     public FailureToPrepareForDownload(String message, Throwable cause) {
