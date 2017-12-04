@@ -3,8 +3,8 @@ package com.jefferson.regah.server.handler;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
-import com.jefferson.regah.server.transport.FailureToPrepareForDownload;
-import com.jefferson.regah.server.transport.Transporter;
+import com.jefferson.regah.transport.FailureToPrepareForDownload;
+import com.jefferson.regah.transport.Transporter;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
@@ -74,6 +74,7 @@ public class FetchResourceHandler implements HttpHandler {
 
     private void sendResponse(HttpExchange exchange, String responseJson, int responseCode) throws IOException {
         exchange.getResponseHeaders().add(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON);
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         exchange.sendResponseHeaders(responseCode, responseJson.length());
         final OutputStream os = exchange.getResponseBody();
         os.write(responseJson.getBytes(StandardCharsets.UTF_8));

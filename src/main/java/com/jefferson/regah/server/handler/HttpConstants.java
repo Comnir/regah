@@ -1,7 +1,8 @@
 package com.jefferson.regah.server.handler;
 
 public class HttpConstants {
-    final static String CONTENT_TYPE = "Content-type";
-    final static String APPLICATION_JSON = "application/json";
-    public static final Object ERROR_REASON = "Error-reason";
+    static final String CONTENT_TYPE = "Content-type";
+    static final String APPLICATION_JSON = "application/json";
+    static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
+    static final String ERROR_REASON = "Error-reason";
 }

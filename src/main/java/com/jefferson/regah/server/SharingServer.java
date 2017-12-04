@@ -4,7 +4,7 @@ import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.http.Server;
 import com.jefferson.regah.server.handler.FetchResourceHandler;
 import com.jefferson.regah.server.handler.ListResourcesHandler;
-import com.jefferson.regah.server.transport.TorrentTransporter;
+import com.jefferson.regah.transport.TorrentTransporter;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -2,9 +2,9 @@ package com.jefferson.regah.server.handler;
 
 import com.google.gson.Gson;
 import com.jefferson.regah.SharedResources;
-import com.jefferson.regah.server.transport.FailureToPrepareForDownload;
-import com.jefferson.regah.server.transport.TransportData;
-import com.jefferson.regah.server.transport.Transporter;
+import com.jefferson.regah.transport.FailureToPrepareForDownload;
+import com.jefferson.regah.transport.TransportData;
+import com.jefferson.regah.transport.Transporter;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import org.junit.jupiter.api.*;

@@ -10,7 +10,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 public class ListResourcesHandler implements HttpHandler {
     private static final Logger log = LogManager.getLogger(ListResourcesHandler.class);
@@ -25,12 +25,17 @@ public class ListResourcesHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         log.info("List resources request");
-        log.debug("Headers: " + exchange.getRequestHeaders());
+        log.debug("Headers:");
+        exchange.getRequestHeaders()
+                .forEach((header, values) ->
+                        log.debug("Header: " + header + ", values: " + values));
 
-        final String response = gson.toJson(sharedResources.getResources().stream().collect(Collectors.toList()));
+        final String response = gson.toJson(Map.of("results", sharedResources.getResources()));
+
         log.debug("Return shared resources: " + response);
 
-        exchange.getResponseHeaders().add("Content-type", "application/json");
+        exchange.getResponseHeaders().add(HttpConstants.CONTENT_TYPE, "application/json");
+        exchange.getResponseHeaders().add(HttpConstants.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
         exchange.sendResponseHeaders(200, response.length());
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(response.getBytes(StandardCharsets.UTF_8));
