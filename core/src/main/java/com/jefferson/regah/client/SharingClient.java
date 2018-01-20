@@ -20,7 +20,6 @@ public class SharingClient {
     public void start() {
         final Map<String, HttpHandler> handlers = Map.of();
 
-
         server.start(handlers);
     }
 }

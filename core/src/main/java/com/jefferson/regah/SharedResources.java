@@ -30,7 +30,7 @@ public class SharedResources {
                 .collect(Collectors.toSet());
     }
 
-    void share(File file) {
+    public void share(File file) {
         resources.add(file);
     }
 
