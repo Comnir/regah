@@ -1,2 +1,5 @@
 rootProject.name = 'regah'
 
+include ':regah-core'
+project(':regah-core').projectDir = "$rootDir/core" as File
+

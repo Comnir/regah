@@ -30,11 +30,11 @@ public class SharedResources {
                 .collect(Collectors.toSet());
     }
 
-    public void share(File file) {
+    void share(File file) {
         resources.add(file);
     }
 
-    public void unshare(File file) {
+    void unshare(File file) {
         resources.remove(file);
     }
 

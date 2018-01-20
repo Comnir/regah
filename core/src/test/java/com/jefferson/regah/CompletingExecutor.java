@@ -7,24 +7,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
-public class CompletingExecutor {
+class CompletingExecutor {
     private static final Logger log = LogManager.getLogger(CompletingExecutor.class);
 
     private final ExecutorService executorService;
     private final CompletionService completionService;
     private final List<Future<Object>> futures;
 
-    public CompletingExecutor() {
+    CompletingExecutor() {
         this.executorService = Executors.newCachedThreadPool();
         this.completionService = new ExecutorCompletionService(executorService);
         this.futures = new ArrayList<>();
     }
 
-    public void submit(Runnable runnable) {
+    void submit(Runnable runnable) {
         futures.add(completionService.submit(Executors.callable(runnable)));
     }
 
-    public void shutdownWhenComplete() throws InterruptedException {
+    void shutdownWhenComplete() throws InterruptedException {
         executorService.shutdown();
 
         for (int i = 0; i < futures.size(); i++) {
@@ -33,8 +33,7 @@ public class CompletingExecutor {
                 doneTask.get();
             } catch (ExecutionException e) {
                 log.error("An error was encountered in one of the tasks. Other tasks will be cancelled.", e);
-                futures.stream()
-                        .forEach(future -> future.cancel(true));
+                futures.forEach(future -> future.cancel(true));
             }
         }
 
