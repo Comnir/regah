@@ -18,7 +18,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class AddHandlerTest {
     private final static Gson gson = new Gson();
@@ -58,7 +59,9 @@ class AddHandlerTest {
     @Test
     void successWhenRequestDoesntHavePaths() throws IOException {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
-        final InputStream requestBody = mock(InputStream.class);
+        final Map<String, List> parameters = Map.of("paths", Arrays.asList(""));
+        final InputStream requestBody = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
+        when(exchange.getRequestBody()).thenReturn(requestBody);
         addHandler.handle(exchange);
 
         verify(exchange).sendResponseHeaders(Mockito.eq(200), Mockito.eq(0L));
@@ -69,7 +72,7 @@ class AddHandlerTest {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
 
         final String path = "/";
-        final Map<String, List> parameters = Map.of(AddHandler.FILE_PATHS_PARAMETER, Arrays.asList(path));
+        final Map<String, List> parameters = Map.of("paths", Arrays.asList(path));
         // use a real InputStream implementation
         final InputStream inputStream = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(inputStream);
