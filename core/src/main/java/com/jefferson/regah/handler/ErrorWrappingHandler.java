@@ -10,21 +10,23 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-class ErrorWrappingHandler {
+public class ErrorWrappingHandler implements HttpHandler {
     private static final Logger log = LogManager.getLogger(ErrorWrappingHandler.class);
     private final HttpHandler handler;
 
-    ErrorWrappingHandler(HttpHandler handler) {
+    public ErrorWrappingHandler(HttpHandler handler) {
         this.handler = handler;
     }
 
-    void handle(HttpExchange exchange) {
+    @Override
+    public void handle(HttpExchange exchange) {
         if (null == exchange) {
             throw new IllegalArgumentException("Got null as argument.");
         }
         try {
             handler.handle(exchange);
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error("Request handling failed", e);
             sendResponse(exchange,
                     "Error encountered while processing the request. " + e.getMessage(),
                     400);
@@ -47,5 +49,6 @@ class ErrorWrappingHandler {
         final OutputStream os = exchange.getResponseBody();
         os.write(responseJson.getBytes(StandardCharsets.UTF_8));
         os.flush();
+        os.close();
     }
 }
