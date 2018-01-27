@@ -5,6 +5,7 @@ import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.server.handler.HttpConstants;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.AdditionalMatchers;
@@ -14,7 +15,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +38,11 @@ class AddHandlerTest {
     @Mock
     private OutputStream responseBody;
 
+    @BeforeAll
+    static void setupAll() {
+        System.out.println("Start all");
+    }
+
     @BeforeEach
     void setup() {
         MockitoAnnotations.initMocks(this);
@@ -57,9 +63,20 @@ class AddHandlerTest {
     }
 
     @Test
-    void successWhenRequestDoesntHavePaths() throws IOException {
+    void errorWhenMissingPathsFromJson() throws IOException {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
-        final Map<String, List> parameters = Map.of("paths", Arrays.asList(""));
+        final InputStream requestBody = new ByteArrayInputStream("{}".getBytes(StandardCharsets.UTF_8));
+        when(exchange.getRequestBody()).thenReturn(requestBody);
+
+        addHandler.handle(exchange);
+
+        verify(exchange).sendResponseHeaders(Mockito.eq(400), AdditionalMatchers.gt(0L));
+    }
+
+    @Test
+    void successWhenRequestHasEmptyPaths() throws IOException {
+        when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
+        final Map<String, List> parameters = Map.of("paths", Collections.emptyList());
         final InputStream requestBody = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(requestBody);
         addHandler.handle(exchange);
@@ -72,7 +89,7 @@ class AddHandlerTest {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
 
         final String path = "/";
-        final Map<String, List> parameters = Map.of("paths", Arrays.asList(path));
+        final Map<String, List> parameters = Map.of("paths", Collections.singletonList(path));
         // use a real InputStream implementation
         final InputStream inputStream = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(inputStream);

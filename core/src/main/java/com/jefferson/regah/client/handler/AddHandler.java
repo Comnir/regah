@@ -18,7 +18,7 @@ public class AddHandler implements HttpHandler {
     private static final Logger log = LogManager.getLogger(AddHandler.class);
     private static final Gson gson = new Gson();
 
-    static final String FILE_PATHS_PARAMETER = "paths";
+    private static final String FILE_PATHS_PARAMETER = "paths";
 
     private final SharedResources sharedResources;
 
@@ -48,7 +48,14 @@ public class AddHandler implements HttpHandler {
                 TypeToken.getParameterized(Map.class, String.class, List.class).getType());
         final List<String> paths = parameters.get(FILE_PATHS_PARAMETER);
 
-        sharedResources.share(new File(paths.get(0)));
+        if (null == paths) {
+            sendResponse(exchange, "Error: Missing '" + FILE_PATHS_PARAMETER + "' parameter", 400);
+            return;
+        }
+
+        if (!paths.isEmpty()) {
+            sharedResources.share(new File(paths.get(0)));
+        }
 
         sendResponse(exchange, "", 200);
     }
