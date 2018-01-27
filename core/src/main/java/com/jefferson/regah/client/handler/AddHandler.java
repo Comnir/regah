@@ -54,7 +54,9 @@ public class AddHandler implements HttpHandler {
         }
 
         if (!paths.isEmpty()) {
-            sharedResources.share(new File(paths.get(0)));
+            paths.stream()
+                    .map(File::new)
+                    .forEach(sharedResources::share);
         }
 
         sendResponse(exchange, "", 200);

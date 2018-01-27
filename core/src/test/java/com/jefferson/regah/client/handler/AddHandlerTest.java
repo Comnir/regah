@@ -85,7 +85,7 @@ class AddHandlerTest {
     }
 
     @Test
-    void inputPathIsPassedOn() throws IOException {
+    void shareIsCalledWithInputPath() throws IOException {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
 
         final String path = "/";
@@ -97,5 +97,22 @@ class AddHandlerTest {
         addHandler.handle(exchange);
 
         verify(sharedResources).share(new File(path));
+    }
+
+    @Test
+    void shareIsCalledWithAllPassedPaths() throws IOException {
+        when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
+
+        final List<String> paths = List.of("/share/ForSharing.txt", "/share/subFolder");
+        final Map<String, List> parameters = Map.of("paths", paths);
+        // use a real InputStream implementation
+        final InputStream inputStream = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
+        when(exchange.getRequestBody()).thenReturn(inputStream);
+
+        addHandler.handle(exchange);
+
+        for (final String s : paths) {
+            verify(sharedResources).share(new File(s));
+        }
     }
 }
