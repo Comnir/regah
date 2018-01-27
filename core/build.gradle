@@ -1,3 +1,12 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
+    }
+}
+
 plugins {
     id "net.ltgt.errorprone" version "0.0.13"
 }
@@ -6,6 +15,7 @@ group 'com.jefferson'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'application'
+apply plugin: 'org.junit.platform.gradle.plugin'
 
 sourceCompatibility = 1.9
 ext.junitJupiterVersion  = '5.0.0'
@@ -33,8 +43,9 @@ dependencies {
     compile group: 'commons-io', name: 'commons-io', version:'2.4'
     */
     testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
     testCompile 'org.mockito:mockito-core:2.11.0'
+
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
 }
 
 task copyLibs(type: Copy)  {
