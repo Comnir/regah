@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +39,7 @@ class FetchResourceHandlerTest {
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.initMocks(this);
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
         when(exchange.getRequestHeaders()).thenReturn(requestHeaders);
         when(exchange.getResponseHeaders()).thenReturn(responseHeaders);
