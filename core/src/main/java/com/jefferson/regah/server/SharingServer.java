@@ -24,7 +24,7 @@ public class SharingServer {
 
     public SharingServer(SharedResources sharedResources) throws IOException {
         this.sharedResources = sharedResources;
-        server = new Server(serverPort);
+        server = new Server(serverPort, "Sharing center server");
     }
 
     public void start() throws IOException {

@@ -18,9 +18,11 @@ public class Server {
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private final int serverPort;
     private final HttpServer httpServer;
+    private final String description;
 
-    public Server(int serverPort) throws IOException {
+    public Server(int serverPort, String description) throws IOException {
         this.serverPort = serverPort;
+        this.description = description;
         this.httpServer = HttpServer.create(new InetSocketAddress(this.serverPort), 10);
     }
 
@@ -34,7 +36,7 @@ public class Server {
 
         httpServer.start();
 
-        log.info("Sharing server was started on port " + serverPort);
+        log.info(description + " started listening on port " + serverPort);
     }
 
     private void shutdown() {
