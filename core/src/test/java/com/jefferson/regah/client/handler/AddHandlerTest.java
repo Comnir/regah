@@ -74,6 +74,18 @@ class AddHandlerTest {
     }
 
     @Test
+    void errorWhenPathsIsNotAList() throws IOException {
+        when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
+        final Map<String, String> parameters = Map.of("paths", "not_list");
+        final InputStream requestBody = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
+        when(exchange.getRequestBody()).thenReturn(requestBody);
+
+        addHandler.handle(exchange);
+
+        verify(exchange).sendResponseHeaders(Mockito.eq(400), AdditionalMatchers.gt(0L));
+    }
+
+    @Test
     void successWhenRequestHasEmptyPaths() throws IOException {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
         final Map<String, List> parameters = Map.of("paths", Collections.emptyList());
@@ -115,4 +127,6 @@ class AddHandlerTest {
             verify(sharedResources).share(new File(s));
         }
     }
+
+
 }

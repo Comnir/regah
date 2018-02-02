@@ -1,6 +1,7 @@
 package com.jefferson.regah.client.handler;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.server.handler.HttpConstants;
@@ -44,8 +45,15 @@ public class AddHandler implements HttpHandler {
                 new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8))) {
             stringBuilder.append(bufferedReader.readLine());
         }
-        final Map<String, List<String>> parameters = gson.fromJson(stringBuilder.toString(),
-                TypeToken.getParameterized(Map.class, String.class, List.class).getType());
+
+        final Map<String, List<String>> parameters;
+        try {
+            parameters = gson.fromJson(stringBuilder.toString(),
+                    TypeToken.getParameterized(Map.class, String.class, List.class).getType());
+        } catch (JsonSyntaxException e) {
+            sendResponse(exchange, "Failed to parse request body as JSON - expected '" + FILE_PATHS_PARAMETER + "' with a list of paths.", 400);
+            return;
+        }
         final List<String> paths = parameters.get(FILE_PATHS_PARAMETER);
 
         if (null == paths) {
@@ -69,5 +77,6 @@ public class AddHandler implements HttpHandler {
         final OutputStream os = exchange.getResponseBody();
         os.write(responseJson.getBytes(StandardCharsets.UTF_8));
         os.flush();
+        os.close();
     }
 }
