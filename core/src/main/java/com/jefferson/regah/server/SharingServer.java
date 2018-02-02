@@ -1,6 +1,7 @@
 package com.jefferson.regah.server;
 
 import com.jefferson.regah.SharedResources;
+import com.jefferson.regah.handler.ErrorWrappingHandler;
 import com.jefferson.regah.http.Server;
 import com.jefferson.regah.server.handler.FetchResourceHandler;
 import com.jefferson.regah.server.handler.ListResourcesHandler;
@@ -29,9 +30,9 @@ public class SharingServer {
 
     public void start() throws IOException {
         final Map<String, HttpHandler> handlers = Map.of(
-                "/listShared", new ListResourcesHandler(sharedResources),
-                "/fetchResources", new FetchResourceHandler(sharedResources,
-                        new TorrentTransporter()));
+                "/listShared", new ErrorWrappingHandler(new ListResourcesHandler(sharedResources)),
+                "/fetchResources", new ErrorWrappingHandler(new FetchResourceHandler(sharedResources,
+                        new TorrentTransporter())));
 
         server.start(handlers);
     }
