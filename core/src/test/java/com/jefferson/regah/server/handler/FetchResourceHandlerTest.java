@@ -2,6 +2,7 @@ package com.jefferson.regah.server.handler;
 
 import com.google.gson.Gson;
 import com.jefferson.regah.SharedResources;
+import com.jefferson.regah.handler.Responder;
 import com.jefferson.regah.transport.FailureToPrepareForDownload;
 import com.jefferson.regah.transport.TransportData;
 import com.jefferson.regah.transport.Transporter;
@@ -51,7 +52,7 @@ class FetchResourceHandlerTest {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(null);
         when(exchange.getRequestHeaders()).thenReturn(requestHeaders);
 
-        new FetchResourceHandler(sharedResources, transporter).handle(exchange);
+        new FetchResourceHandler(sharedResources, transporter, new Responder()).handle(exchange);
 
         verify(exchange).sendResponseHeaders(Mockito.eq(400), AdditionalMatchers.gt(0L));
     }
@@ -69,7 +70,7 @@ class FetchResourceHandlerTest {
         when(exchange.getRequestBody()).thenReturn(inputStream);
 
         // call with the given request
-        new FetchResourceHandler(sharedResources, transporter).handle(exchange);
+        new FetchResourceHandler(sharedResources, transporter, new Responder()).handle(exchange);
 
         // verify behaviour
         verify(exchange).sendResponseHeaders(Mockito.eq(400), AdditionalMatchers.gt(0L));
@@ -90,7 +91,7 @@ class FetchResourceHandlerTest {
         when(sharedResources.isShared(expectedFile)).thenReturn(true);
 
         // call with the given request
-        new FetchResourceHandler(sharedResources, transporter).handle(exchange);
+        new FetchResourceHandler(sharedResources, transporter, new Responder()).handle(exchange);
 
         // verify behaviour
         verify(transporter).getDownloadInfoFor(expectedFile);
@@ -109,7 +110,7 @@ class FetchResourceHandlerTest {
         when(transporter.getDownloadInfoFor(Mockito.any())).thenReturn(transportData);
 
         // call with the given request
-        new FetchResourceHandler(sharedResources, transporter).handle(exchange);
+        new FetchResourceHandler(sharedResources, transporter, new Responder()).handle(exchange);
 
         verify(exchange).sendResponseHeaders(200, expectedJson.length());
         verify(responseOutpuStream).write(expectedJson.getBytes(StandardCharsets.UTF_8));
@@ -125,7 +126,7 @@ class FetchResourceHandlerTest {
         when(transporter.getDownloadInfoFor(Mockito.any())).thenThrow(new FailureToPrepareForDownload("Thrown exception for test - should be converted to HTTP error response", null));
 
         // call with the given request
-        new FetchResourceHandler(sharedResources, transporter).handle(exchange);
+        new FetchResourceHandler(sharedResources, transporter, new Responder()).handle(exchange);
 
         verify(exchange).sendResponseHeaders(Mockito.eq(503), AdditionalMatchers.gt(0L));
     }

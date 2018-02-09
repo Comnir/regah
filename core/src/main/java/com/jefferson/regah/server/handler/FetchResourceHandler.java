@@ -3,6 +3,7 @@ package com.jefferson.regah.server.handler;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
+import com.jefferson.regah.handler.Responder;
 import com.jefferson.regah.transport.FailureToPrepareForDownload;
 import com.jefferson.regah.transport.Transporter;
 import com.sun.net.httpserver.HttpExchange;
@@ -10,7 +11,10 @@ import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -22,10 +26,12 @@ public class FetchResourceHandler implements HttpHandler {
 
     private final SharedResources sharedResources;
     private final Transporter transporter;
+    private final Responder responder;
 
-    public FetchResourceHandler(SharedResources sharedResources, Transporter transporter) {
+    public FetchResourceHandler(SharedResources sharedResources, Transporter transporter, Responder responder) {
         this.sharedResources = sharedResources;
         this.transporter = transporter;
+        this.responder = responder;
     }
 
     @Override
@@ -38,7 +44,7 @@ public class FetchResourceHandler implements HttpHandler {
                     HttpConstants.ERROR_REASON,
                     "Invalid request format!"));
 
-            sendResponse(exchange, responseJson, 400);
+            responder.sendResponse(exchange, responseJson, 400);
             return;
         }
 
@@ -56,28 +62,19 @@ public class FetchResourceHandler implements HttpHandler {
                     HttpConstants.ERROR_REASON,
                     "Requested file is not shared!"));
 
-            sendResponse(exchange, responseJson, 400);
+            responder.sendResponse(exchange, responseJson, 400);
             return;
         }
 
         try {
             final String responseJson = transporter.getDownloadInfoFor(file).asJson();
-            sendResponse(exchange, responseJson, 200);
+            responder.sendResponse(exchange, responseJson, 200);
         } catch (FailureToPrepareForDownload e) {
             final String responseJson = gson.toJson(Map.of(
                     HttpConstants.ERROR_REASON,
                     "Failed to prepare requested file for download. " + e.getMessage()));
 
-            sendResponse(exchange, responseJson, 503);
+            responder.sendResponse(exchange, responseJson, 503);
         }
-    }
-
-    private void sendResponse(HttpExchange exchange, String responseJson, int responseCode) throws IOException {
-        exchange.getResponseHeaders().add(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON);
-        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-        exchange.sendResponseHeaders(responseCode, responseJson.length());
-        final OutputStream os = exchange.getResponseBody();
-        os.write(responseJson.getBytes(StandardCharsets.UTF_8));
-        os.flush();
     }
 }

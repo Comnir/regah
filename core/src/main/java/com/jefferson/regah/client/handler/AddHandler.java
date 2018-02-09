@@ -4,13 +4,17 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
+import com.jefferson.regah.handler.Responder;
 import com.jefferson.regah.server.handler.HttpConstants;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -22,9 +26,11 @@ public class AddHandler implements HttpHandler {
     private static final String FILE_PATHS_PARAMETER = "paths";
 
     private final SharedResources sharedResources;
+    private final Responder responder;
 
-    public AddHandler(SharedResources sharedResources) {
+    public AddHandler(SharedResources sharedResources, Responder responder) {
         this.sharedResources = sharedResources;
+        this.responder = responder;
     }
 
     @Override
@@ -36,7 +42,7 @@ public class AddHandler implements HttpHandler {
                     HttpConstants.ERROR_REASON,
                     "Invalid request format!"));
 
-            sendResponse(exchange, responseJson, 400);
+            responder.sendResponse(exchange, responseJson, 400);
             return;
         }
 
@@ -51,13 +57,13 @@ public class AddHandler implements HttpHandler {
             parameters = gson.fromJson(stringBuilder.toString(),
                     TypeToken.getParameterized(Map.class, String.class, List.class).getType());
         } catch (JsonSyntaxException e) {
-            sendResponse(exchange, "Failed to parse request body as JSON - expected '" + FILE_PATHS_PARAMETER + "' with a list of paths.", 400);
+            responder.sendResponse(exchange, "Failed to parse request body as JSON - expected '" + FILE_PATHS_PARAMETER + "' with a list of paths.", 400);
             return;
         }
         final List<String> paths = parameters.get(FILE_PATHS_PARAMETER);
 
         if (null == paths) {
-            sendResponse(exchange, "Error: Missing '" + FILE_PATHS_PARAMETER + "' parameter", 400);
+            responder.sendResponse(exchange, "Error: Missing '" + FILE_PATHS_PARAMETER + "' parameter", 400);
             return;
         }
 
@@ -67,16 +73,6 @@ public class AddHandler implements HttpHandler {
                     .forEach(sharedResources::share);
         }
 
-        sendResponse(exchange, "", 200);
-    }
-
-    private void sendResponse(HttpExchange exchange, String responseJson, int responseCode) throws IOException {
-        exchange.getResponseHeaders().add(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON);
-        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-        exchange.sendResponseHeaders(responseCode, responseJson.length());
-        final OutputStream os = exchange.getResponseBody();
-        os.write(responseJson.getBytes(StandardCharsets.UTF_8));
-        os.flush();
-        os.close();
+        responder.sendResponse(exchange, "", 200);
     }
 }

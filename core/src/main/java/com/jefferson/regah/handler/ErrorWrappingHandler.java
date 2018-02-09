@@ -1,18 +1,14 @@
 package com.jefferson.regah.handler;
 
-import com.jefferson.regah.server.handler.HttpConstants;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-
 public class ErrorWrappingHandler implements HttpHandler {
     private static final Logger log = LogManager.getLogger(ErrorWrappingHandler.class);
     private final HttpHandler handler;
+    private final Responder responder = new Responder();
 
     public ErrorWrappingHandler(HttpHandler handler) {
         this.handler = handler;
@@ -27,28 +23,9 @@ public class ErrorWrappingHandler implements HttpHandler {
             handler.handle(exchange);
         } catch (Exception e) {
             log.error("Request handling failed", e);
-            sendResponse(exchange,
+            responder.sendResponse(exchange,
                     "Error encountered while processing the request. " + e.getMessage(),
                     400);
         }
-    }
-
-    // TODO: extraqct sendResponse* methods into a new class for reuse in multiple handlers
-    private void sendResponse(HttpExchange exchange, String responseJson, int responseCode) {
-        try {
-            sendResponseThrowing(exchange, responseJson, responseCode);
-        } catch (IOException e) {
-            log.error("Error encountered while writing response. ", e);
-        }
-    }
-
-    private void sendResponseThrowing(HttpExchange exchange, String responseJson, int responseCode) throws IOException {
-        exchange.getResponseHeaders().add(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON);
-        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-        exchange.sendResponseHeaders(responseCode, responseJson.length());
-        final OutputStream os = exchange.getResponseBody();
-        os.write(responseJson.getBytes(StandardCharsets.UTF_8));
-        os.flush();
-        os.close();
     }
 }
