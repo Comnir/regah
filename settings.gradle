@@ -2,4 +2,7 @@ rootProject.name = 'regah'
 
 include ':regah-core'
 project(':regah-core').projectDir = "$rootDir/core" as File
+include 'regah-gui-web'
+project(':regah-gui-web').projectDir = "$rootDir/gui/web" as File
+
 
