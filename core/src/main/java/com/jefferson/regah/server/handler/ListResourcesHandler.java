@@ -24,19 +24,12 @@ public class ListResourcesHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) {
-        log.info("List resources request");
-
-        if (!HttpConstants.APPLICATION_JSON.equals(exchange.getRequestHeaders().getFirst(HttpConstants.CONTENT_TYPE))) {
-            final String responseJson = gson.toJson(Map.of(
-                    HttpConstants.ERROR_REASON,
-                    "Invalid request format!"));
-
-            responder.sendResponse(exchange, responseJson, 400);
-            return;
-        }
+        log.info("List resources request - method: " + exchange.getRequestMethod());
 
         final String response = gson.toJson(Map.of("results", sharedResources.getResources()));
 
-        responder.sendResponse(exchange, response, 200);
+        log.trace("Response: " + response);
+
+        responder.respondeWithJson(exchange, response, 200);
     }
 }

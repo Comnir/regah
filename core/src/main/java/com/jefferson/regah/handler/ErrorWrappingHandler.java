@@ -23,7 +23,7 @@ public class ErrorWrappingHandler implements HttpHandler {
             handler.handle(exchange);
         } catch (Exception e) {
             log.error("Request handling failed", e);
-            responder.sendResponse(exchange,
+            responder.respondeWithJson(exchange,
                     "Error encountered while processing the request. " + e.getMessage(),
                     400);
         }

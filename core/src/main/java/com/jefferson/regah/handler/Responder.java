@@ -15,7 +15,7 @@ public class Responder {
     public Responder() {
     }
 
-    public void sendResponse(HttpExchange exchange, String responseJson, int responseCode) {
+    public void respondeWithJson(HttpExchange exchange, String responseJson, int responseCode) {
         try {
             sendResponseThrowing(exchange, responseJson, responseCode);
         } catch (IOException e) {

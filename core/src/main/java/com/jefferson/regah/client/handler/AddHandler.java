@@ -42,7 +42,7 @@ public class AddHandler implements HttpHandler {
                     HttpConstants.ERROR_REASON,
                     "Invalid request format!"));
 
-            responder.sendResponse(exchange, responseJson, 400);
+            responder.respondeWithJson(exchange, responseJson, 400);
             return;
         }
 
@@ -57,13 +57,13 @@ public class AddHandler implements HttpHandler {
             parameters = gson.fromJson(stringBuilder.toString(),
                     TypeToken.getParameterized(Map.class, String.class, List.class).getType());
         } catch (JsonSyntaxException e) {
-            responder.sendResponse(exchange, "Failed to parse request body as JSON - expected '" + FILE_PATHS_PARAMETER + "' with a list of paths.", 400);
+            responder.respondeWithJson(exchange, "Failed to parse request body as JSON - expected '" + FILE_PATHS_PARAMETER + "' with a list of paths.", 400);
             return;
         }
         final List<String> paths = parameters.get(FILE_PATHS_PARAMETER);
 
         if (null == paths) {
-            responder.sendResponse(exchange, "Error: Missing '" + FILE_PATHS_PARAMETER + "' parameter", 400);
+            responder.respondeWithJson(exchange, "Error: Missing '" + FILE_PATHS_PARAMETER + "' parameter", 400);
             return;
         }
 
@@ -73,6 +73,6 @@ public class AddHandler implements HttpHandler {
                     .forEach(sharedResources::share);
         }
 
-        responder.sendResponse(exchange, "", 200);
+        responder.respondeWithJson(exchange, "", 200);
     }
 }

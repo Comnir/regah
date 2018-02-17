@@ -44,7 +44,7 @@ public class FetchResourceHandler implements HttpHandler {
                     HttpConstants.ERROR_REASON,
                     "Invalid request format!"));
 
-            responder.sendResponse(exchange, responseJson, 400);
+            responder.respondeWithJson(exchange, responseJson, 400);
             return;
         }
 
@@ -62,19 +62,19 @@ public class FetchResourceHandler implements HttpHandler {
                     HttpConstants.ERROR_REASON,
                     "Requested file is not shared!"));
 
-            responder.sendResponse(exchange, responseJson, 400);
+            responder.respondeWithJson(exchange, responseJson, 400);
             return;
         }
 
         try {
             final String responseJson = transporter.getDownloadInfoFor(file).asJson();
-            responder.sendResponse(exchange, responseJson, 200);
+            responder.respondeWithJson(exchange, responseJson, 200);
         } catch (FailureToPrepareForDownload e) {
             final String responseJson = gson.toJson(Map.of(
                     HttpConstants.ERROR_REASON,
                     "Failed to prepare requested file for download. " + e.getMessage()));
 
-            responder.sendResponse(exchange, responseJson, 503);
+            responder.respondeWithJson(exchange, responseJson, 503);
         }
     }
 }

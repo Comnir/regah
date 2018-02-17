@@ -8,7 +8,6 @@ import com.sun.net.httpserver.HttpExchange;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -59,15 +58,6 @@ class ListResourcesHandlerTest {
     }
 
     @Test
-    void errorResponseWhenContentIsNotJson() {
-        when(requestHeaders.getFirst(CONTENT_TYPE)).thenReturn("NOT_JSON");
-
-        listResourcesHandler.handle(exchange);
-
-        verify(responder).sendResponse(Mockito.eq(exchange), AdditionalMatchers.find(".*"), Mockito.eq(400));
-    }
-
-    @Test
     void emptyListWhenNoSharedResources() {
         when(requestHeaders.getFirst(CONTENT_TYPE)).thenReturn(APPLICATION_JSON);
         when(shareResource.getResources()).thenReturn(Collections.emptySet());
@@ -75,7 +65,7 @@ class ListResourcesHandlerTest {
         listResourcesHandler.handle(exchange);
 
         final String jsonResult = asJson(Map.of("results", Collections.emptySet()));
-        verify(responder).sendResponse(Mockito.eq(exchange), Mockito.eq(jsonResult), Mockito.eq(200));
+        verify(responder).respondeWithJson(Mockito.eq(exchange), Mockito.eq(jsonResult), Mockito.eq(200));
     }
 
     @Test
@@ -89,7 +79,7 @@ class ListResourcesHandlerTest {
 
         listResourcesHandler.handle(exchange);
 
-        verify(responder).sendResponse(exchange, gson.toJson(Map.of("results", files)), 200);
+        verify(responder).respondeWithJson(exchange, gson.toJson(Map.of("results", files)), 200);
     }
 
     private String asJson(Map<String, Object> map) {
