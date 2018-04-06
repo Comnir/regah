@@ -6,7 +6,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
 public class Application {
     private static final Logger log = LogManager.getLogger(Application.class);
@@ -14,7 +13,6 @@ public class Application {
     public static void main(String[] args) {
         boolean anySuccess = false;
         final SharedResources sharedResources = new SharedResources();
-        sharedResources.share(Paths.get("/home/jefferson/git/regah/src/test/resources/share").toFile());
         try {
             new SharingServer(sharedResources).start();
             anySuccess = true;

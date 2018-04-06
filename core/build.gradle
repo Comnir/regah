@@ -8,7 +8,8 @@ buildscript {
 }
 
 plugins {
-    id "net.ltgt.errorprone" version "0.0.13"
+    id "net.ltgt.errorprone" version "0.0.13" // static analysis
+    id 'org.unbroken-dome.test-sets' version '1.4.5' // configure different test sets
 }
 
 group 'com.jefferson'
@@ -31,6 +32,10 @@ repositories {
     }
 }
 
+testSets {
+    acceptanceTest
+}
+
 dependencies {
     compile 'org.apache.logging.log4j:log4j-api:2.9.1'
     compile 'org.apache.logging.log4j:log4j-core:2.9.1'
@@ -44,6 +49,7 @@ dependencies {
     */
     testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     testCompile 'org.mockito:mockito-core:2.11.0'
+    testCompile 'io.rest-assured:rest-assured:3.0.7'
 
     testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
 }
