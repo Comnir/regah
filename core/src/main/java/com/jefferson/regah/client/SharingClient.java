@@ -26,4 +26,8 @@ public class SharingClient {
 
         server.start(handlers);
     }
+
+    public void stop() {
+        server.stop();
+    }
 }

@@ -23,12 +23,13 @@ public class Server {
     public Server(int serverPort, String description) throws IOException {
         this.serverPort = serverPort;
         this.description = description;
+        HttpServer.create();
         this.httpServer = HttpServer.create(new InetSocketAddress(this.serverPort), 10);
     }
 
     public void start(Map<String, HttpHandler> pathsWithHandlers) {
         Runtime.getRuntime()
-                .addShutdownHook(new Thread(this::shutdown));
+                .addShutdownHook(new Thread(this::stop));
 
         httpServer.setExecutor(executor);
 
@@ -39,10 +40,10 @@ public class Server {
         log.info(description + " started listening on port " + serverPort);
     }
 
-    private void shutdown() {
-        log.info("Shutting down server - will wait a bit for running requests to finish");
+    public void stop() {
+        log.info("Stopping server - will wait a bit for running requests to finish");
         log.debug("Stopping HTTP server.");
-        httpServer.stop(10);
+        httpServer.stop(1);
 
         log.debug("Shutting down the executor of the server requests.");
         executor.shutdown(); // Disable new tasks from being submitted

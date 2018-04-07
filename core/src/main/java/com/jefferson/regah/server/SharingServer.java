@@ -20,11 +20,10 @@ import java.util.Map;
  */
 public class SharingServer {
     private static final Logger log = LogManager.getLogger(SharingServer.class);
-    private final int serverPort = 42424;
     private final SharedResources sharedResources;
     private final Server server;
 
-    public SharingServer(SharedResources sharedResources) throws IOException {
+    public SharingServer(SharedResources sharedResources, int serverPort) throws IOException {
         this.sharedResources = sharedResources;
         server = new Server(serverPort, "Sharing center server");
     }
@@ -36,5 +35,9 @@ public class SharingServer {
                         new TorrentTransporter(), new Responder())));
 
         server.start(handlers);
+    }
+
+    public void stop() {
+        server.stop();
     }
 }
