@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 
 public class FetchResourceHandler implements HttpHandler {
     private static final Logger log = LogManager.getLogger(FetchResourceHandler.class);
@@ -39,7 +40,7 @@ public class FetchResourceHandler implements HttpHandler {
         log.info("Fetch resources request");
         log.debug("Headers: " + exchange.getRequestHeaders());
 
-        if (!HttpConstants.APPLICATION_JSON.equals(exchange.getRequestHeaders().getFirst(HttpConstants.CONTENT_TYPE))) {
+        if (!isJsonContentType(exchange)) {
             final String responseJson = gson.toJson(Map.of(
                     HttpConstants.ERROR_REASON,
                     "Invalid request format!"));
@@ -76,5 +77,12 @@ public class FetchResourceHandler implements HttpHandler {
 
             responder.respondeWithJson(exchange, responseJson, 503);
         }
+    }
+
+    private boolean isJsonContentType(HttpExchange exchange) {
+        return Optional
+                .ofNullable(exchange.getRequestHeaders().getFirst(HttpConstants.CONTENT_TYPE))
+                .filter(type -> type.startsWith(HttpConstants.APPLICATION_JSON))
+                .isPresent();
     }
 }

@@ -11,6 +11,7 @@ import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -22,17 +23,19 @@ public class SharingServer {
     private static final Logger log = LogManager.getLogger(SharingServer.class);
     private final SharedResources sharedResources;
     private final Server server;
+    private final File parentFolderForTorrent;
 
-    public SharingServer(SharedResources sharedResources, int serverPort) throws IOException {
+    public SharingServer(SharedResources sharedResources, int serverPort, final File parentFolderForTorrent) throws IOException {
         this.sharedResources = sharedResources;
         server = new Server(serverPort, "Sharing center server");
+        this.parentFolderForTorrent = parentFolderForTorrent;
     }
 
     public void start() throws IOException {
         final Map<String, HttpHandler> handlers = Map.of(
                 "/listShared", new ErrorWrappingHandler(new ListResourcesHandler(sharedResources, new Responder())),
                 "/fetchResources", new ErrorWrappingHandler(new FetchResourceHandler(sharedResources,
-                        new TorrentTransporter(), new Responder())));
+                        new TorrentTransporter(parentFolderForTorrent), new Responder())));
 
         server.start(handlers);
     }

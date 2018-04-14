@@ -38,6 +38,7 @@ public class AddHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         log.info("Got a request to add resources");
 
+        // TODO: refactor out common logic between add/list handlers (will also be used for a future 'remove' handler)
         if (!isJsonContentType(exchange)) {
             final String error = "Invalid request format!";
             log.error(error);
@@ -49,14 +50,7 @@ public class AddHandler implements HttpHandler {
             return;
         }
 
-        final StringBuilder stringBuilder = new StringBuilder();
-        try (final BufferedReader bufferedReader = new BufferedReader(
-                new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8))) {
-            stringBuilder.append(bufferedReader.readLine());
-        }
-
-        final String requestBody = stringBuilder.toString();
-        log.trace(String.format("Add request - request body: %s", requestBody));
+        final String requestBody = readRequestBody(exchange);
 
         final Map<String, List<String>> parameters;
         try {
@@ -87,6 +81,18 @@ public class AddHandler implements HttpHandler {
         }
 
         responder.respondeWithJson(exchange, "", 200);
+    }
+
+    private String readRequestBody(HttpExchange exchange) throws IOException {
+        final StringBuilder stringBuilder = new StringBuilder();
+        try (final BufferedReader bufferedReader = new BufferedReader(
+                new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8))) {
+            stringBuilder.append(bufferedReader.readLine());
+        }
+
+        final String requestBody = stringBuilder.toString();
+        log.trace(String.format("Add request - request body: %s", requestBody));
+        return requestBody;
     }
 
     private boolean isJsonContentType(HttpExchange exchange) {

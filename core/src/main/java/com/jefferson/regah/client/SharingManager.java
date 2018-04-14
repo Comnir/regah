@@ -10,12 +10,12 @@ import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.util.Map;
 
-public class SharingClient {
+public class SharingManager {
     private final int serverPort = 42421;
     private final SharedResources sharedResources;
     private final Server server;
 
-    public SharingClient(SharedResources sharedResources) throws IOException {
+    public SharingManager(SharedResources sharedResources) throws IOException {
         this.sharedResources = sharedResources;
         this.server = new Server(serverPort, "Sharing center management");
     }

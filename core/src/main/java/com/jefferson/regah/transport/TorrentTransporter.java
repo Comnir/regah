@@ -23,8 +23,10 @@ public class TorrentTransporter implements Transporter {
 
     private final Map<String, Client> seeders;
     private final InetAddress localAddress;
+    private File parentFolderForTorrent;
 
-    public TorrentTransporter() throws UnknownHostException {
+    public TorrentTransporter(File parentFolderForTorrent) throws UnknownHostException {
+        this.parentFolderForTorrent = parentFolderForTorrent;
         seeders = new ConcurrentHashMap<>();
         this.localAddress = InetAddress.getByName("localhost");
     }
@@ -39,7 +41,7 @@ public class TorrentTransporter implements Transporter {
                 torrent.save(os);
             }
 
-            final SharedTorrent sharedTorrent = new SharedTorrent(torrent, file, true);
+            final SharedTorrent sharedTorrent = new SharedTorrent(torrent, parentFolderForTorrent, true);
             final Client client = new Client(localAddress, sharedTorrent);
             final Peer localAsPeer = client.getPeerSpec();
 

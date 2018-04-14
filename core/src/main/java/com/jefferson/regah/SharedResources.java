@@ -41,6 +41,7 @@ public class SharedResources {
     }
 
     public void share(File file) {
+        log.trace("New file shared: {}", file);
         resources.add(file);
     }
 
@@ -49,6 +50,8 @@ public class SharedResources {
     }
 
     public boolean isShared(File file) {
-        return resources.contains(file);
+        final boolean shared = resources.contains(file);
+        log.trace("Checking is file shared. Result: {}, path: {}", shared, file);
+        return shared;
     }
 }
