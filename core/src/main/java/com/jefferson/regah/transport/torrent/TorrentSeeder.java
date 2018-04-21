@@ -1,4 +1,4 @@
-package com.jefferson.regah;
+package com.jefferson.regah.transport.torrent;
 
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
 import com.turn.ttorrent.client.Client;
@@ -10,15 +10,15 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.net.InetAddress;
 
-class TorrentSeeder {
+public class TorrentSeeder {
     private static final Logger log = LogManager.getLogger(TorrentSeeder.class);
     private final ImmutableWrapper<Client> clientWrapper;
 
-    TorrentSeeder() {
+    public TorrentSeeder() {
         this.clientWrapper = new ImmutableWrapper<>();
     }
 
-    Peer seedSharedTorrent(int seedTime, SharedTorrent torrent, InetAddress localAddress) throws IOException {
+    public Peer seedSharedTorrent(int seedTime, SharedTorrent torrent, InetAddress localAddress) throws IOException {
         final Client client = clientWrapper.set(new Client(localAddress, torrent));
         log.info("Seeder# listening on " + client.getPeerSpec());
 
@@ -35,7 +35,7 @@ class TorrentSeeder {
         return client.getPeerSpec();
     }
 
-    void stop() {
+    public void stop() {
         log.debug("Seeder# is stopping");
         clientWrapper.get().stop(false);
     }

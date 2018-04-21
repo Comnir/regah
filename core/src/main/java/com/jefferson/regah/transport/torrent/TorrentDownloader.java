@@ -1,4 +1,4 @@
-package com.jefferson.regah;
+package com.jefferson.regah.transport.torrent;
 
 import com.turn.ttorrent.client.Client;
 import com.turn.ttorrent.client.SharedTorrent;
@@ -10,13 +10,13 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
 
-class TorrentDownloader {
+public class TorrentDownloader {
     private static final Logger log = LogManager.getLogger(TorrentDownloader.class);
 
-    TorrentDownloader() {
+    public TorrentDownloader() {
     }
 
-    void downloadSharedTorrent(final SharedTorrent torrent, final Peer remotePeer, InetAddress localAddress) throws IOException {
+    public void downloadSharedTorrent(final SharedTorrent torrent, final Peer remotePeer, InetAddress localAddress) throws IOException {
         Client client = new Client(localAddress, torrent);
         log.info("Downloader# got seeder listening on " + client.getPeerSpec());
 

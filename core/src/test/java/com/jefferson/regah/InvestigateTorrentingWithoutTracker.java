@@ -1,5 +1,7 @@
 package com.jefferson.regah;
 
+import com.jefferson.regah.transport.torrent.TorrentDownloader;
+import com.jefferson.regah.transport.torrent.TorrentSeeder;
 import com.turn.ttorrent.client.SharedTorrent;
 import com.turn.ttorrent.common.Peer;
 import com.turn.ttorrent.common.Torrent;

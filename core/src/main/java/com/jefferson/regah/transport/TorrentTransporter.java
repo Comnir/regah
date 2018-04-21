@@ -34,10 +34,11 @@ public class TorrentTransporter implements Transporter {
     public TorrentTransporter(File parentFolderForTorrent) throws UnknownHostException {
         this.parentFolderForTorrent = parentFolderForTorrent;
         seeders = new ConcurrentHashMap<>();
-        this.localAddress = InetAddress.getByName("localhost");
+        this.localAddress = InetAddress.getByName(ANY_ADDRESS);
     }
 
-    public TransportData dataForDownloading(File file) throws FailureToPrepareForDownload {
+    @Override
+    public TorrentTransportData dataForDownloading(File file) throws FailureToPrepareForDownload {
         final String uuid = UUID.randomUUID().toString();
         try {
             final File torrentFile = File.createTempFile("download-" + uuid + "-", ".torrent");
@@ -46,7 +47,7 @@ public class TorrentTransporter implements Transporter {
                 torrent.save(os);
             }
             torrentImmutableWrapper.set(torrent);
-            final SharedTorrent sharedTorrent = new SharedTorrent(torrent, parentFolderForTorrent, true);
+            final SharedTorrent sharedTorrent = new SharedTorrent(torrent, file.getParentFile(), true);
 
             final Client client = new Client(localAddress, sharedTorrent);
             final Peer localAsPeer = client.getPeerSpec();

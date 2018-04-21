@@ -129,5 +129,11 @@ class SharingServerTest {
         transporter.downloadWithData(data);
 
         Files.walk(downloadDestination).forEach(System.out::println);
+
+//        MessageDigest md = MessageDigest.getInstance("MD5");
+//        final byte[] originalHash = md.digest(Files.readAllBytes(sharedFile.toPath()));
+//        final File targetFile = new File(tempDestination, sharedFile.getName());
+//        final byte[] resultHash = md.digest(Files.readAllBytes(targetFile.toPath()));
+//        assertArrayEquals(originalHash, resultHash);
     }
 }
