@@ -68,7 +68,7 @@ public class FetchResourceHandler implements HttpHandler {
         }
 
         try {
-            final String responseJson = transporter.getDownloadInfoFor(file).asJson();
+            final String responseJson = transporter.dataForDownloading(file).asJson();
             responder.respondeWithJson(exchange, responseJson, 200);
         } catch (FailureToPrepareForDownload e) {
             final String responseJson = gson.toJson(Map.of(

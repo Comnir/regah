@@ -87,14 +87,14 @@ class FetchResourceHandlerTest {
         when(exchange.getRequestBody()).thenReturn(inputStream);
         final TransportData transportData = Mockito.mock(TransportData.class);
         when(transportData.asJson()).thenReturn("{}");
-        when(transporter.getDownloadInfoFor(expectedFile)).thenReturn(transportData);
+        when(transporter.dataForDownloading(expectedFile)).thenReturn(transportData);
         when(sharedResources.isShared(expectedFile)).thenReturn(true);
 
         // call with the given request
         new FetchResourceHandler(sharedResources, transporter, new Responder()).handle(exchange);
 
         // verify behaviour
-        verify(transporter).getDownloadInfoFor(expectedFile);
+        verify(transporter).dataForDownloading(expectedFile);
     }
 
     @Test
@@ -107,7 +107,7 @@ class FetchResourceHandlerTest {
         final TransportData transportData = Mockito.mock(TransportData.class);
         final String expectedJson = "{\"mocked\":\"1\"}";
         when(transportData.asJson()).thenReturn(expectedJson);
-        when(transporter.getDownloadInfoFor(Mockito.any())).thenReturn(transportData);
+        when(transporter.dataForDownloading(Mockito.any())).thenReturn(transportData);
 
         // call with the given request
         new FetchResourceHandler(sharedResources, transporter, new Responder()).handle(exchange);
@@ -123,7 +123,7 @@ class FetchResourceHandlerTest {
 
         final InputStream inputStream = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(inputStream);
-        when(transporter.getDownloadInfoFor(Mockito.any())).thenThrow(new FailureToPrepareForDownload("Thrown exception for test - should be converted to HTTP error response", null));
+        when(transporter.dataForDownloading(Mockito.any())).thenThrow(new FailureToPrepareForDownload("Thrown exception for test - should be converted to HTTP error response", null));
 
         // call with the given request
         new FetchResourceHandler(sharedResources, transporter, new Responder()).handle(exchange);

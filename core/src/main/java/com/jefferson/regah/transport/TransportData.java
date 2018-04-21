@@ -4,4 +4,6 @@ public interface TransportData {
     String asJson();
 
     String getId();
+
+    void acceptVisitor(TransportDataVisitor visitor);
 }
