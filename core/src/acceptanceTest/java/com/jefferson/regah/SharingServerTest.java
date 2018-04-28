@@ -124,7 +124,7 @@ class SharingServerTest {
                 .body(new Gson().toJson(Map.of("filePath", path)))
                 .when()
                 .get(String.format("http://localhost:%d/fetchResources", SERVER_PORT));
-// response JSON example: {"id":"2bd4a48c-6416-48a4-a1e5-9b02ce8d9eae","seedingPeereerDto":{"ip":[127,0,0,1],"port":49152}}
+
         final TorrentTransportData data = new GsonBuilder()
                 .registerTypeAdapter(byte[].class, new ByteArrayTypeAdapter())
                 .create()

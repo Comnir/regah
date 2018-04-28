@@ -106,7 +106,7 @@ public class InvestigateTorrenting {
             try {
                 Thread.sleep(TimeUnit.SECONDS.toMillis(10));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                System.out.println("Interrupted while waiting for downloader " + e);
             }
         }
     }

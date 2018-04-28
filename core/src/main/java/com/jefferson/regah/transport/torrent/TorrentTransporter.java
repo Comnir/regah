@@ -39,7 +39,7 @@ public class TorrentTransporter implements Transporter {
     }
 
     @Override
-    public TorrentTransportData dataForDownloading(File file) throws FailureToPrepareForDownload {
+    public TransportData dataForDownloading(File file) throws FailureToPrepareForDownload {
         final String uuid = UUID.randomUUID().toString();
         try {
             final File torrentFile = File.createTempFile("download-" + uuid + "-", ".torrent");

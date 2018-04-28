@@ -42,8 +42,7 @@ class TorrentTransporterTest {
         Files.walk(temporaryFolderSeeder)
                 .sorted(Comparator.reverseOrder())
                 .map(Path::toFile)
-                .map(File::delete)
-                .forEach(f -> System.out.println(String.format("Failed to delete %s", f)));
+                .forEach(File::delete);
     }
 
     @Test
@@ -79,7 +78,7 @@ class TorrentTransporterTest {
         Files.copy(source, sharedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         sharedFile.deleteOnExit();
         final Torrent torrent = SharedTorrent.create(sharedFile, null, "regah");
-        final TorrentTransportData transportData = new TorrentTransporter(temporaryFolderSeeder.toFile())
+        final TorrentTransportData transportData = (TorrentTransportData) new TorrentTransporter(temporaryFolderSeeder.toFile())
                 .dataForDownloading(sharedFile);
 
         final SharedTorrent downloadTorrent = new SharedTorrent(torrent, temporaryFolderDownloader.toFile());
