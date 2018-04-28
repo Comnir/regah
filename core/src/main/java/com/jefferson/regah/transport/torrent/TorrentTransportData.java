@@ -1,9 +1,11 @@
-package com.jefferson.regah.transport;
+package com.jefferson.regah.transport.torrent;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.jefferson.regah.dto.PeerDto;
-import com.jefferson.regah.transport.torrent.ByteArrayTypeAdapter;
+import com.jefferson.regah.transport.InvalidTransportData;
+import com.jefferson.regah.transport.TransportData;
+import com.jefferson.regah.transport.TransportDataVisitor;
 import com.turn.ttorrent.common.Peer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,7 +42,7 @@ public class TorrentTransportData implements TransportData {
         }
     }
 
-    public byte[] getTorrentData() {
+    byte[] getTorrentData() {
         return torrentData;
     }
 

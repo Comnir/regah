@@ -1,7 +1,7 @@
 package com.jefferson.regah.transport;
 
-class InvalidTransportData extends Exception {
-    InvalidTransportData(String message, Throwable cause) {
+public class InvalidTransportData extends Exception {
+    public InvalidTransportData(String message, Throwable cause) {
         super(message, cause);
     }
 }

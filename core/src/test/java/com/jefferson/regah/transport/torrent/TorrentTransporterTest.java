@@ -1,7 +1,7 @@
-package com.jefferson.regah.transport;
+package com.jefferson.regah.transport.torrent;
 
-import com.jefferson.regah.transport.torrent.TorrentDownloader;
-import com.jefferson.regah.transport.torrent.TorrentSeeder;
+import com.jefferson.regah.transport.FailureToPrepareForDownload;
+import com.jefferson.regah.transport.InvalidTransportData;
 import com.turn.ttorrent.client.SharedTorrent;
 import com.turn.ttorrent.common.Peer;
 import com.turn.ttorrent.common.Torrent;
@@ -42,7 +42,8 @@ class TorrentTransporterTest {
         Files.walk(temporaryFolderSeeder)
                 .sorted(Comparator.reverseOrder())
                 .map(Path::toFile)
-                .forEach(File::delete);
+                .map(File::delete)
+                .forEach(f -> System.out.println(String.format("Failed to delete %s", f)));
     }
 
     @Test
@@ -101,19 +102,13 @@ class TorrentTransporterTest {
         Files.copy(source, sharedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         sharedFile.deleteOnExit();
         final Torrent torrent = SharedTorrent.create(sharedFile, null, "regah");
-//        final TorrentTransportData transportData = new TorrentTransporter(temporaryFolderSeeder.toFile()).dataForDownloading(sharedFile);
+
         final TorrentSeeder seeder = new TorrentSeeder();
-        final Peer peer = seeder.seedSharedTorrent(300, new SharedTorrent(torrent, sharedFile.getParentFile()), InetAddress.getByName("0.0.0.0"));
+        final Peer peer = seeder.seedSharedTorrent(60, new SharedTorrent(torrent, sharedFile.getParentFile()), InetAddress.getByName("0.0.0.0"));
+        final TorrentTransportData transportData = new TorrentTransportData("ooo", peer, torrent.getEncoded());
 
-
-//        final TorrentTransporter downloader = new TorrentTransporter(temporaryFolderDownloader.toFile());
-//        downloader.downloadWithData(transportData);
-        /*final SharedTorrent torrent = new SharedTorrent(transportData.getTorrentData(), temporaryFolderDownloader.toFile());
-        final TorrentDownloader downloader = new TorrentDownloader();
-        downloader.downloadSharedTorrent(torrent, transportData.getSeedingPeer(), InetAddress.getByName("127.0.0.1"));*/
-        final SharedTorrent downloadTorrent = new SharedTorrent(torrent, temporaryFolderDownloader.toFile());
-        final TorrentDownloader downloader = new TorrentDownloader();
-        downloader.downloadSharedTorrent(downloadTorrent, peer, InetAddress.getByName("0.0.0.0"));
+        final TorrentTransporter downloader = new TorrentTransporter(temporaryFolderDownloader.toFile());
+        downloader.downloadWithData(transportData);
 
         MessageDigest md = MessageDigest.getInstance("MD5");
         final byte[] originalHash = md.digest(Files.readAllBytes(sharedFile.toPath()));

@@ -1,6 +1,7 @@
-package com.jefferson.regah.transport;
+package com.jefferson.regah.transport.torrent;
 
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
+import com.jefferson.regah.transport.*;
 import com.turn.ttorrent.client.Client;
 import com.turn.ttorrent.client.SharedTorrent;
 import com.turn.ttorrent.common.Peer;
@@ -92,7 +93,7 @@ public class TorrentTransporter implements Transporter {
         final SharedTorrent torrent;
         try {
             //            torrent = new SharedTorrent(new Torrent(data.getTorrentData(), false), destination.toFile(), false);
-            torrent = new SharedTorrent(torrentImmutableWrapper.get(), destination.toFile(), false);
+            torrent = new SharedTorrent(/*torrentImmutableWrapper.get()*/data.getTorrentData(), destination.toFile(), false);
         } catch (IOException | NoSuchAlgorithmException e) {
             final String message = String.format("Failed to parse transport torrent data %s", e.getMessage());
             log.error(message);

@@ -3,9 +3,9 @@ package com.jefferson.regah;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.jefferson.regah.server.handler.HttpConstants;
-import com.jefferson.regah.transport.TorrentTransportData;
-import com.jefferson.regah.transport.TorrentTransporter;
 import com.jefferson.regah.transport.torrent.ByteArrayTypeAdapter;
+import com.jefferson.regah.transport.torrent.TorrentTransportData;
+import com.jefferson.regah.transport.torrent.TorrentTransporter;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
@@ -17,6 +17,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +28,7 @@ import java.util.stream.Stream;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 class SharingServerTest {
     private static final int SERVER_PORT = 42424;
@@ -47,10 +51,12 @@ class SharingServerTest {
     @AfterEach
     void stopApplication() throws IOException {
         application.stop();
-        Files.walk(temporaryFolder)
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
+        try (final Stream<Path> folderTree = Files.walk(temporaryFolder)) {
+            folderTree.sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .map(File::delete)
+                    .forEach(f -> System.out.println(String.format("Not deleted: %s", f)));
+        }
     }
 
     @Test
@@ -92,7 +98,7 @@ class SharingServerTest {
     }
 
     @Test
-    void downloadSharedFile() throws IOException {
+    void downloadSharedFile() throws IOException, NoSuchAlgorithmException {
         final List<String> absolutePaths = Stream.of("/share/ForSharing.txt",
                 "/share/subFolder/subFile1.txt",
                 "/share/subFolder/subFile2.txt")
@@ -123,17 +129,15 @@ class SharingServerTest {
                 .registerTypeAdapter(byte[].class, new ByteArrayTypeAdapter())
                 .create()
                 .fromJson(response.body().asString(), TorrentTransportData.class);
+        final File sharedFile = Paths.get(path).toFile();
         final Path downloadDestination = Files.createTempDirectory("regah-test-download");
 
         final TorrentTransporter transporter = new TorrentTransporter(downloadDestination.toFile());
         transporter.downloadWithData(data);
 
-        Files.walk(downloadDestination).forEach(System.out::println);
-
-//        MessageDigest md = MessageDigest.getInstance("MD5");
-//        final byte[] originalHash = md.digest(Files.readAllBytes(sharedFile.toPath()));
-//        final File targetFile = new File(tempDestination, sharedFile.getName());
-//        final byte[] resultHash = md.digest(Files.readAllBytes(targetFile.toPath()));
-//        assertArrayEquals(originalHash, resultHash);
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        final byte[] originalHash = md.digest(Files.readAllBytes(sharedFile.toPath()));
+        final byte[] resultHash = md.digest(Files.readAllBytes(downloadDestination.resolve(sharedFile.getName())));
+        assertArrayEquals(originalHash, resultHash);
     }
 }
