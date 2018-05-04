@@ -3,9 +3,11 @@ package com.jefferson.regah.server.handler;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
+import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
 import com.jefferson.regah.handler.Responder;
 import com.jefferson.regah.transport.FailureToPrepareForDownload;
 import com.jefferson.regah.transport.Transporter;
+import com.jefferson.regah.transport.serialization.TransportDataSerializer;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
@@ -18,6 +20,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class FetchResourceHandler implements HttpHandler {
     private static final Logger log = LogManager.getLogger(FetchResourceHandler.class);
@@ -28,11 +31,13 @@ public class FetchResourceHandler implements HttpHandler {
     private final SharedResources sharedResources;
     private final Transporter transporter;
     private final Responder responder;
+    private final ImmutableWrapper<Supplier<TransportDataSerializer>> trasportDataConverterCreator;
 
     public FetchResourceHandler(SharedResources sharedResources, Transporter transporter, Responder responder) {
         this.sharedResources = sharedResources;
         this.transporter = transporter;
         this.responder = responder;
+        trasportDataConverterCreator = new ImmutableWrapper<>();
     }
 
     @Override
@@ -68,7 +73,9 @@ public class FetchResourceHandler implements HttpHandler {
         }
 
         try {
-            responder.respondeWithJson(exchange, transporter.dataForDownloading(file).asJson(), 200);
+            responder.respondeWithJson(exchange,
+                    createTransportDataConverter().toJson(transporter.dataForDownloading(file)),
+                    200);
         } catch (FailureToPrepareForDownload e) {
             final String responseJson = gson.toJson(Map.of(
                     HttpConstants.ERROR_REASON,
@@ -78,10 +85,21 @@ public class FetchResourceHandler implements HttpHandler {
         }
     }
 
+    private TransportDataSerializer createTransportDataConverter() {
+        return trasportDataConverterCreator.asOptional()
+                .map(Supplier::get)
+                .orElseGet(TransportDataSerializer::new);
+    }
+
     private boolean isJsonContentType(HttpExchange exchange) {
         return Optional
                 .ofNullable(exchange.getRequestHeaders().getFirst(HttpConstants.CONTENT_TYPE))
                 .filter(type -> type.startsWith(HttpConstants.APPLICATION_JSON))
                 .isPresent();
+    }
+
+    FetchResourceHandler setTrasportDataConverterCreator(final Supplier<TransportDataSerializer> creator) {
+        trasportDataConverterCreator.set(creator);
+        return this;
     }
 }

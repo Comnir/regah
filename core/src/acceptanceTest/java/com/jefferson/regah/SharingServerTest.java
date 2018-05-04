@@ -1,11 +1,12 @@
 package com.jefferson.regah;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.jefferson.regah.server.handler.HttpConstants;
-import com.jefferson.regah.transport.torrent.ByteArrayTypeAdapter;
-import com.jefferson.regah.transport.torrent.TorrentTransportData;
-import com.jefferson.regah.transport.torrent.TorrentTransporter;
+import com.jefferson.regah.transport.InvalidTransportData;
+import com.jefferson.regah.transport.TransportData;
+import com.jefferson.regah.transport.Transporter;
+import com.jefferson.regah.transport.UnsupportedTransportType;
+import com.jefferson.regah.transport.serialization.TransportDataDeserializer;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
@@ -98,7 +99,7 @@ class SharingServerTest {
     }
 
     @Test
-    void downloadSharedFile() throws IOException, NoSuchAlgorithmException {
+    void downloadSharedFile() throws IOException, NoSuchAlgorithmException, UnsupportedTransportType, InvalidTransportData {
         final List<String> absolutePaths = Stream.of("/share/ForSharing.txt",
                 "/share/subFolder/subFile1.txt",
                 "/share/subFolder/subFile2.txt")
@@ -125,15 +126,14 @@ class SharingServerTest {
                 .when()
                 .get(String.format("http://localhost:%d/fetchResources", SERVER_PORT));
 
-        final TorrentTransportData data = new GsonBuilder()
-                .registerTypeAdapter(byte[].class, new ByteArrayTypeAdapter())
-                .create()
-                .fromJson(response.body().asString(), TorrentTransportData.class);
+        final TransportDataDeserializer deserializer = new TransportDataDeserializer(response.body().asString());
+        final TransportData data = deserializer.getTransportData();
+
         final File sharedFile = Paths.get(path).toFile();
         final Path downloadDestination = Files.createTempDirectory("regah-test-download");
 
-        final TorrentTransporter transporter = new TorrentTransporter(downloadDestination.toFile());
-        transporter.downloadWithData(data);
+        final Transporter transporter = deserializer.getTransporter();//new TorrentTransporter();
+        transporter.downloadWithData(data, downloadDestination);
 
         MessageDigest md = MessageDigest.getInstance("MD5");
         final byte[] originalHash = md.digest(Files.readAllBytes(sharedFile.toPath()));

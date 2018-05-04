@@ -30,12 +30,14 @@ public class TorrentTransporter implements Transporter {
 
     private final Map<String, Client> seeders;
     private final InetAddress localAddress;
-    private File parentFolderForTorrent;
 
-    public TorrentTransporter(File parentFolderForTorrent) throws UnknownHostException {
-        this.parentFolderForTorrent = parentFolderForTorrent;
+    public TorrentTransporter() {
         seeders = new ConcurrentHashMap<>();
-        this.localAddress = InetAddress.getByName(ANY_ADDRESS);
+        try {
+            this.localAddress = InetAddress.getByName(ANY_ADDRESS);
+        } catch (UnknownHostException e) {
+            throw new IllegalStateException("Failed to initialize InetAddress for local host!");
+        }
     }
 
     @Override
@@ -73,10 +75,6 @@ public class TorrentTransporter implements Transporter {
             log.warn(message, e);
             throw new FailureToPrepareForDownload(message, e);
         }
-    }
-
-    public void downloadWithData(final TransportData downloadData) {
-        downloadWithData(downloadData, parentFolderForTorrent.toPath());
     }
 
     @Override

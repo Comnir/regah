@@ -31,11 +31,11 @@ public class SharingServer {
         this.parentFolderForTorrent = parentFolderForTorrent;
     }
 
-    public void start() throws IOException {
+    public void start() {
         final Map<String, HttpHandler> handlers = Map.of(
                 "/listShared", new ErrorWrappingHandler(new ListResourcesHandler(sharedResources, new Responder())),
                 "/fetchResources", new ErrorWrappingHandler(new FetchResourceHandler(sharedResources,
-                        new TorrentTransporter(parentFolderForTorrent), new Responder())));
+                        new TorrentTransporter(), new Responder())));
 
         server.start(handlers);
     }

@@ -78,7 +78,7 @@ class TorrentTransporterTest {
         Files.copy(source, sharedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         sharedFile.deleteOnExit();
         final Torrent torrent = SharedTorrent.create(sharedFile, null, "regah");
-        final TorrentTransportData transportData = (TorrentTransportData) new TorrentTransporter(temporaryFolderSeeder.toFile())
+        final TorrentTransportData transportData = (TorrentTransportData) new TorrentTransporter()
                 .dataForDownloading(sharedFile);
 
         final SharedTorrent downloadTorrent = new SharedTorrent(torrent, temporaryFolderDownloader.toFile());
@@ -106,8 +106,8 @@ class TorrentTransporterTest {
         final Peer peer = seeder.seedSharedTorrent(60, new SharedTorrent(torrent, sharedFile.getParentFile()), InetAddress.getByName("0.0.0.0"));
         final TorrentTransportData transportData = new TorrentTransportData("ooo", peer, torrent.getEncoded());
 
-        final TorrentTransporter downloader = new TorrentTransporter(temporaryFolderDownloader.toFile());
-        downloader.downloadWithData(transportData);
+        final TorrentTransporter downloader = new TorrentTransporter();
+        downloader.downloadWithData(transportData, temporaryFolderDownloader);
 
         MessageDigest md = MessageDigest.getInstance("MD5");
         final byte[] originalHash = md.digest(Files.readAllBytes(sharedFile.toPath()));
