@@ -56,6 +56,7 @@ public class TransportDataDeserializer {
             case TRANSPORT_TYPE_TORRENT_KEY:
                 transporterWrapper.set(new TorrentTransporter());
                 transportDataWrapper.set(gson.fromJson(map.get(TRANSPORT_DATA_KEY), TorrentTransportData.class));
+                break;
             default:
                 throw new UnsupportedTransportType(String.format("Provided transport data type is unknown" +
                         " and won't be handled. Type: %s", transportType));

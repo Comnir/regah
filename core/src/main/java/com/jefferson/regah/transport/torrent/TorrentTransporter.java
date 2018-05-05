@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 public class TorrentTransporter implements Transporter {
     private static final Logger log = LogManager.getLogger(TorrentTransporter.class);
     private static final String ANY_ADDRESS = "0.0.0.0";
-    private static ImmutableWrapper<Torrent> torrentImmutableWrapper = new ImmutableWrapper<>();
 
     private final Map<String, Client> seeders;
     private final InetAddress localAddress;
@@ -49,7 +48,7 @@ public class TorrentTransporter implements Transporter {
             try (final OutputStream os = new FileOutputStream(torrentFile)) {
                 torrent.save(os);
             }
-            torrentImmutableWrapper.set(torrent);
+
             final SharedTorrent sharedTorrent = new SharedTorrent(torrent, file.getParentFile(), true);
 
             final Client client = new Client(localAddress, sharedTorrent);
@@ -105,9 +104,22 @@ public class TorrentTransporter implements Transporter {
         } catch (InvalidTransportData invalidTransportData) {
             throw new IllegalArgumentException("Got torrent trasport data, but it was malformed.", invalidTransportData);
         }
+        final InetAddress address;
+        try {
+            address = InetAddress.getByName(ANY_ADDRESS);
+        } catch (UnknownHostException e) {
+            final String message = "Trying to get localhost address failed.";
+            throw new RuntimeException(message, e);
+        }
+        download(torrent, remotePeer, address);
+
+        log.info("Completed downloading torrent " + data.getId());
+    }
+
+    private void download(SharedTorrent torrent, Peer remotePeer, InetAddress address) {
         final Client client;
         try {
-            client = new Client(InetAddress.getByName(ANY_ADDRESS), torrent);
+            client = new Client(address, torrent);
         } catch (IOException e) {
             final String message = String.format("Failed to create a torrent client to download data. %s", e.getMessage());
 
@@ -143,8 +155,6 @@ public class TorrentTransporter implements Transporter {
         client.handleDiscoveredPeers(List.of(remotePeer));
         log.debug("Will wait for download to complete");
         client.waitForCompletion();
-
-        log.info("Completed downloading torrent " + data.getId());
     }
 
     static class TransporterProvidingVisitor implements TransportDataVisitor {

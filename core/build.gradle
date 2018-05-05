@@ -2,9 +2,6 @@ buildscript {
     repositories {
         mavenCentral()
     }
-    dependencies {
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
-    }
 }
 
 plugins {
@@ -16,10 +13,9 @@ group 'com.jefferson'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'application'
-apply plugin: 'org.junit.platform.gradle.plugin'
 
 sourceCompatibility = 1.9
-ext.junitJupiterVersion  = '5.0.0'
+ext.junitJupiterVersion  = '5.0.3'
 mainClassName = 'com.jefferson.regah.Application'
 
 repositories {
@@ -36,22 +32,29 @@ testSets {
     acceptanceTest
 }
 
+test {
+    useJUnitPlatform()
+}
+acceptanceTest {
+    useJUnitPlatform()
+}
+
 dependencies {
     compile 'org.apache.logging.log4j:log4j-api:2.9.1'
     compile 'org.apache.logging.log4j:log4j-core:2.9.1'
     compile 'com.google.code.gson:gson:2.8.2'
     compile 'com.jefferson.revised.turn:ttorrent-core:1.6-4'
 
-    testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     testCompile 'org.mockito:mockito-core:2.11.0'
     testCompile 'io.rest-assured:rest-assured:3.0.7'
 
     // sl4j-simple is required by ttorrent's logger. Without it, logging is missing for ttorrent
     // and the following error is printed:
     // 'SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".'
-    testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
+//    testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
 
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
 }
 
 task copyLibs(type: Copy)  {
