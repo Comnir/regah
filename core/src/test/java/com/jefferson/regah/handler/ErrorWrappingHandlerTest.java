@@ -56,7 +56,7 @@ class ErrorWrappingHandlerTest {
     void infoAboutExceptionFromWrappedHandlerSentAsRepsonse() throws IOException {
         final HttpExchange exchange = mock(HttpExchange.class);
         final HttpHandler handler = mock(HttpHandler.class);
-        final IOException exception = new IOException("Error encountered during handling what needs to be handled");
+        final IOException exception = new IOException("Expected exception as part of the test.");
         doThrow(exception).when(handler).handle(exchange);
         final ErrorWrappingHandler errorWrappingHandler = new ErrorWrappingHandler(handler);
 
