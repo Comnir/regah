@@ -124,7 +124,7 @@ class SharingServerTest {
                 .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
                 .body(new Gson().toJson(Map.of("filePath", path)))
                 .when()
-                .get(String.format("http://localhost:%d/fetchResources", SERVER_PORT));
+                .get(String.format("http://localhost:%d/prepareResourceForDownload", SERVER_PORT));
 
         final TransportDataDeserializer deserializer = new TransportDataDeserializer(response.body().asString());
         final TransportData data = deserializer.getTransportData();

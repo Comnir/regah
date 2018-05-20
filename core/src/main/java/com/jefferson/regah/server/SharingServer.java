@@ -4,8 +4,8 @@ import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.handler.ErrorWrappingHandler;
 import com.jefferson.regah.handler.Responder;
 import com.jefferson.regah.http.Server;
-import com.jefferson.regah.server.handler.FetchResourceHandler;
 import com.jefferson.regah.server.handler.ListResourcesHandler;
+import com.jefferson.regah.server.handler.PrepareResourceForDownloadHandler;
 import com.jefferson.regah.transport.torrent.TorrentTransporter;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +34,7 @@ public class SharingServer {
     public void start() {
         final Map<String, HttpHandler> handlers = Map.of(
                 "/listShared", new ErrorWrappingHandler(new ListResourcesHandler(sharedResources, new Responder())),
-                "/fetchResources", new ErrorWrappingHandler(new FetchResourceHandler(sharedResources,
+                "/prepareResourceForDownload", new ErrorWrappingHandler(new PrepareResourceForDownloadHandler(sharedResources,
                         new TorrentTransporter(), new Responder())));
 
         server.start(handlers);

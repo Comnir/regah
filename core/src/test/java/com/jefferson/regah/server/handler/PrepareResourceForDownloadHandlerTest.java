@@ -22,7 +22,7 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class FetchResourceHandlerTest {
+class PrepareResourceForDownloadHandlerTest {
     private final static Gson gson = new Gson();
 
     @Mock
@@ -52,7 +52,7 @@ class FetchResourceHandlerTest {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(null);
         when(exchange.getRequestHeaders()).thenReturn(requestHeaders);
 
-        new FetchResourceHandler(sharedResources, transporter, new Responder()).handle(exchange);
+        new PrepareResourceForDownloadHandler(sharedResources, transporter, new Responder()).handle(exchange);
 
         verify(exchange).sendResponseHeaders(Mockito.eq(400), AdditionalMatchers.gt(0L));
     }
@@ -61,7 +61,7 @@ class FetchResourceHandlerTest {
     void requestFileIsNotShared() throws IOException {
         // prepare an HTTP request for a file
         final String path = this.getClass().getResource("/noshare/NotForShare.txt").getPath();
-        final Map<String, String> parameters = Map.of(FetchResourceHandler.FILE_PATH_PARAMETER, path);
+        final Map<String, String> parameters = Map.of(PrepareResourceForDownloadHandler.FILE_PATH_PARAMETER, path);
         // use a real InputStream implementation
         final InputStream inputStream = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
 
@@ -70,7 +70,7 @@ class FetchResourceHandlerTest {
         when(exchange.getRequestBody()).thenReturn(inputStream);
 
         // call with the given request
-        new FetchResourceHandler(sharedResources, transporter, new Responder()).handle(exchange);
+        new PrepareResourceForDownloadHandler(sharedResources, transporter, new Responder()).handle(exchange);
 
         // verify behaviour
         verify(exchange).sendResponseHeaders(Mockito.eq(400), AdditionalMatchers.gt(0L));
@@ -80,7 +80,7 @@ class FetchResourceHandlerTest {
     void transportGotTheRequestFile() throws IOException, FailureToPrepareForDownload {
         // prepare an HTTP request for a file
         final String path = this.getClass().getResource("/share/ForSharing.txt").getPath();
-        final Map<String, String> parameters = Map.of(FetchResourceHandler.FILE_PATH_PARAMETER, path);
+        final Map<String, String> parameters = Map.of(PrepareResourceForDownloadHandler.FILE_PATH_PARAMETER, path);
         final File expectedFile = new File(path);
         // use a real InputStream implementation
         final InputStream inputStream = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
@@ -88,12 +88,12 @@ class FetchResourceHandlerTest {
         when(sharedResources.isShared(expectedFile)).thenReturn(true);
 
         // call with the given request
-        final FetchResourceHandler fetchResourceHandler = new FetchResourceHandler(sharedResources, transporter, new Responder());
+        final PrepareResourceForDownloadHandler prepareResourceForDownloadHandler = new PrepareResourceForDownloadHandler(sharedResources, transporter, new Responder());
         final TransportDataSerializer transportDataSerializer = mock(TransportDataSerializer.class);
         when(transportDataSerializer.toJson(any())).thenReturn("{}");
 
-        fetchResourceHandler.setTrasportDataConverterCreator(() -> transportDataSerializer);
-        fetchResourceHandler.handle(exchange);
+        prepareResourceForDownloadHandler.setTransportDataConverterCreator(() -> transportDataSerializer);
+        prepareResourceForDownloadHandler.handle(exchange);
 
         // verify behaviour
         verify(transporter).dataForDownloading(expectedFile);
@@ -102,18 +102,18 @@ class FetchResourceHandlerTest {
     @Test
     void transportDataIsReturned() throws IOException {
         when(sharedResources.isShared(Mockito.any())).thenReturn(true);
-        final Map<String, String> parameters = Map.of(FetchResourceHandler.FILE_PATH_PARAMETER, "");
+        final Map<String, String> parameters = Map.of(PrepareResourceForDownloadHandler.FILE_PATH_PARAMETER, "");
 
         final InputStream inputStream = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(inputStream);
         final String expectedJson = "{\"mocked\":\"1\"}";
 
         // call with the given request
-        final FetchResourceHandler fetchResourceHandler = new FetchResourceHandler(sharedResources, transporter, new Responder());
+        final PrepareResourceForDownloadHandler prepareResourceForDownloadHandler = new PrepareResourceForDownloadHandler(sharedResources, transporter, new Responder());
         final TransportDataSerializer transportDataSerializer = mock(TransportDataSerializer.class);
         when(transportDataSerializer.toJson(any())).thenReturn(expectedJson);
-        fetchResourceHandler.setTrasportDataConverterCreator(() -> transportDataSerializer);
-        fetchResourceHandler.handle(exchange);
+        prepareResourceForDownloadHandler.setTransportDataConverterCreator(() -> transportDataSerializer);
+        prepareResourceForDownloadHandler.handle(exchange);
 
         verify(exchange).sendResponseHeaders(200, expectedJson.length());
         verify(responseOutpuStream).write(expectedJson.getBytes(StandardCharsets.UTF_8));
@@ -122,14 +122,14 @@ class FetchResourceHandlerTest {
     @Test
     void errorWhenFailedToPrepareForDownload() throws FailureToPrepareForDownload, IOException {
         when(sharedResources.isShared(Mockito.any())).thenReturn(true);
-        final Map<String, String> parameters = Map.of(FetchResourceHandler.FILE_PATH_PARAMETER, "");
+        final Map<String, String> parameters = Map.of(PrepareResourceForDownloadHandler.FILE_PATH_PARAMETER, "");
 
         final InputStream inputStream = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(inputStream);
         when(transporter.dataForDownloading(Mockito.any())).thenThrow(new FailureToPrepareForDownload("Thrown exception for test - should be converted to HTTP error response", null));
 
         // call with the given request
-        new FetchResourceHandler(sharedResources, transporter, new Responder()).handle(exchange);
+        new PrepareResourceForDownloadHandler(sharedResources, transporter, new Responder()).handle(exchange);
 
         verify(exchange).sendResponseHeaders(Mockito.eq(503), AdditionalMatchers.gt(0L));
     }

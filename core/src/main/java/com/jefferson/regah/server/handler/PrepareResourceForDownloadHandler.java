@@ -22,8 +22,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class FetchResourceHandler implements HttpHandler {
-    private static final Logger log = LogManager.getLogger(FetchResourceHandler.class);
+public class PrepareResourceForDownloadHandler implements HttpHandler {
+    private static final Logger log = LogManager.getLogger(PrepareResourceForDownloadHandler.class);
     private final static Gson gson = new Gson();
 
     static final String FILE_PATH_PARAMETER = "filePath";
@@ -31,13 +31,13 @@ public class FetchResourceHandler implements HttpHandler {
     private final SharedResources sharedResources;
     private final Transporter transporter;
     private final Responder responder;
-    private final ImmutableWrapper<Supplier<TransportDataSerializer>> trasportDataConverterCreator;
+    private final ImmutableWrapper<Supplier<TransportDataSerializer>> transportDataConverterCreator;
 
-    public FetchResourceHandler(SharedResources sharedResources, Transporter transporter, Responder responder) {
+    public PrepareResourceForDownloadHandler(SharedResources sharedResources, Transporter transporter, Responder responder) {
         this.sharedResources = sharedResources;
         this.transporter = transporter;
         this.responder = responder;
-        trasportDataConverterCreator = new ImmutableWrapper<>();
+        transportDataConverterCreator = new ImmutableWrapper<>();
     }
 
     @Override
@@ -86,7 +86,7 @@ public class FetchResourceHandler implements HttpHandler {
     }
 
     private TransportDataSerializer createTransportDataConverter() {
-        return trasportDataConverterCreator.asOptional()
+        return transportDataConverterCreator.asOptional()
                 .map(Supplier::get)
                 .orElseGet(TransportDataSerializer::new);
     }
@@ -98,8 +98,8 @@ public class FetchResourceHandler implements HttpHandler {
                 .isPresent();
     }
 
-    FetchResourceHandler setTrasportDataConverterCreator(final Supplier<TransportDataSerializer> creator) {
-        trasportDataConverterCreator.set(creator);
+    PrepareResourceForDownloadHandler setTransportDataConverterCreator(final Supplier<TransportDataSerializer> creator) {
+        transportDataConverterCreator.set(creator);
         return this;
     }
 }
