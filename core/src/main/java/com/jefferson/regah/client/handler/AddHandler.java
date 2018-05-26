@@ -39,17 +39,23 @@ public class AddHandler implements HttpHandler {
         log.info("Got a request to add resources");
 
         // TODO: refactor out common logic between add/list handlers (will also be used for a future 'remove' handler)
-        if (!isJsonContentType(exchange)) {
-            final String error = "Invalid request format!";
-            log.error(error);
-            final String responseJson = gson.toJson(Map.of(
-                    HttpConstants.ERROR_REASON,
-                    error));
+        verifyRequest(exchange);
 
-            responder.respondeWithJson(exchange, responseJson, 400);
+        final List<String> paths = parseRequestParameters(exchange);
+        if (paths == null) {
             return;
         }
 
+        if (paths.isEmpty()) {
+            log.warn("Add request got no paths to add.");
+        } else {
+            act(paths);
+        }
+
+        responder.respondeWithJson(exchange, "", 200);
+    }
+
+    private List<String> parseRequestParameters(HttpExchange exchange) throws IOException {
         final String requestBody = readRequestBody(exchange);
 
         final Map<String, List<String>> parameters;
@@ -57,30 +63,28 @@ public class AddHandler implements HttpHandler {
             parameters = gson.fromJson(requestBody,
                     TypeToken.getParameterized(Map.class, String.class, List.class).getType());
         } catch (JsonSyntaxException e) {
-            final String error = "Failed to parse request body as JSON - expected '" + FILE_PATHS_PARAMETER + "' with a list of paths.";
-            log.error(error);
-            responder.respondeWithJson(exchange, error, 400);
-            return;
+            throw new InvalidRequest("Failed to parse request body as JSON - expected '" + FILE_PATHS_PARAMETER + "' with a list of paths.", e);
         }
         final List<String> paths = parameters.get(FILE_PATHS_PARAMETER);
 
         if (null == paths) {
-            final String error = "Error: Missing '" + FILE_PATHS_PARAMETER + "' parameter";
-            log.error(error);
-            responder.respondeWithJson(exchange, error, 400);
-            return;
-        }
+            throw new InvalidRequest("Error: Missing '" + FILE_PATHS_PARAMETER + "' parameter");
 
-        if (!paths.isEmpty()) {
-            log.trace("Add request - got paths to add: " + paths);
-            paths.stream()
-                    .map(File::new)
-                    .forEach(sharedResources::share);
-        } else {
-            log.warn("Add request got no paths to add.");
         }
+        return paths;
+    }
 
-        responder.respondeWithJson(exchange, "", 200);
+    private void verifyRequest(HttpExchange exchange) {
+        if (!isJsonContentType(exchange)) {
+            throw new InvalidRequest();
+        }
+    }
+
+    private void act(final List<String> paths) {
+        log.trace("Add request - got paths to add: " + paths);
+        paths.stream()
+                .map(File::new)
+                .forEach(sharedResources::share);
     }
 
     private String readRequestBody(HttpExchange exchange) throws IOException {

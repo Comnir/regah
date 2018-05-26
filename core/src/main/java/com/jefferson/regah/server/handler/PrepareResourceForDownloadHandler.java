@@ -3,6 +3,8 @@ package com.jefferson.regah.server.handler;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
+import com.jefferson.regah.client.handler.InvalidRequest;
+import com.jefferson.regah.client.handler.RequestProcessingFailed;
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
 import com.jefferson.regah.handler.Responder;
 import com.jefferson.regah.transport.FailureToPrepareForDownload;
@@ -45,31 +47,13 @@ public class PrepareResourceForDownloadHandler implements HttpHandler {
         log.info("Fetch resources request");
         log.debug("Headers: " + exchange.getRequestHeaders());
 
-        if (!isJsonContentType(exchange)) {
-            final String responseJson = gson.toJson(Map.of(
-                    HttpConstants.ERROR_REASON,
-                    "Invalid request format!"));
+        verifyRequest(exchange);
 
-            responder.respondeWithJson(exchange, responseJson, 400);
-            return;
-        }
-
-        final StringBuilder stringBuilder = new StringBuilder();
-        try (final BufferedReader bufferedReader = new BufferedReader(
-                new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8))) {
-            stringBuilder.append(bufferedReader.readLine());
-        }
-        final Map<String, String> parameters = gson.fromJson(stringBuilder.toString(),
-                TypeToken.getParameterized(Map.class, String.class, String.class).getType());
+        final Map<String, String> parameters = parseRequestParameters(exchange);
         final File file = new File(parameters.get(FILE_PATH_PARAMETER));
 
         if (!sharedResources.isShared(file)) {
-            final String responseJson = gson.toJson(Map.of(
-                    HttpConstants.ERROR_REASON,
-                    "Requested file is not shared!"));
-
-            responder.respondeWithJson(exchange, responseJson, 400);
-            return;
+            throw new InvalidRequest("Requested file is not shared.");
         }
 
         try {
@@ -77,11 +61,23 @@ public class PrepareResourceForDownloadHandler implements HttpHandler {
                     createTransportDataConverter().toJson(transporter.dataForDownloading(file)),
                     200);
         } catch (FailureToPrepareForDownload e) {
-            final String responseJson = gson.toJson(Map.of(
-                    HttpConstants.ERROR_REASON,
-                    "Failed to prepare requested file for download. " + e.getMessage()));
+            throw new RequestProcessingFailed("Failed to prepare requested file for download. " + e.getMessage());
+        }
+    }
 
-            responder.respondeWithJson(exchange, responseJson, 503);
+    private Map<String, String> parseRequestParameters(HttpExchange exchange) throws IOException {
+        final StringBuilder stringBuilder = new StringBuilder();
+        try (final BufferedReader bufferedReader = new BufferedReader(
+                new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8))) {
+            stringBuilder.append(bufferedReader.readLine());
+        }
+        return gson.fromJson(stringBuilder.toString(),
+                TypeToken.getParameterized(Map.class, String.class, String.class).getType());
+    }
+
+    private void verifyRequest(HttpExchange exchange) {
+        if (!isJsonContentType(exchange)) {
+            throw new InvalidRequest("Invalid request format!");
         }
     }
 

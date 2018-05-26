@@ -2,14 +2,15 @@ package com.jefferson.regah.server.handler;
 
 import com.google.gson.Gson;
 import com.jefferson.regah.SharedResources;
+import com.jefferson.regah.handler.ErrorWrappingHandler;
 import com.jefferson.regah.handler.Responder;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.io.File;
@@ -62,10 +63,10 @@ class ListResourcesHandlerTest {
         when(requestHeaders.getFirst(CONTENT_TYPE)).thenReturn(APPLICATION_JSON);
         when(shareResource.getResources()).thenReturn(Collections.emptySet());
 
-        listResourcesHandler.handle(exchange);
+        new ErrorWrappingHandler(listResourcesHandler).handle(exchange);
 
         final String jsonResult = asJson(Map.of("results", Collections.emptySet()));
-        verify(responder).respondeWithJson(Mockito.eq(exchange), Mockito.eq(jsonResult), Mockito.eq(200));
+        verify(responder).respondeWithJson(ArgumentMatchers.eq(exchange), ArgumentMatchers.eq(jsonResult), ArgumentMatchers.eq(200));
     }
 
     @Test
@@ -77,7 +78,7 @@ class ListResourcesHandlerTest {
                 .collect(Collectors.toSet());
         when(shareResource.getResources()).thenReturn(files);
 
-        listResourcesHandler.handle(exchange);
+        new ErrorWrappingHandler(listResourcesHandler).handle(exchange);
 
         verify(responder).respondeWithJson(exchange, gson.toJson(Map.of("results", files)), 200);
     }

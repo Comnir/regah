@@ -19,6 +19,7 @@ import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Comparator;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
@@ -39,10 +40,11 @@ class TorrentTransporterTest {
     }
 
     private void deleteFolder(Path temporaryFolderSeeder) throws IOException {
-        Files.walk(temporaryFolderSeeder)
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
+        try (final Stream<Path> walk = Files.walk(temporaryFolderSeeder)) {
+            walk.sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        }
     }
 
     @Test
@@ -53,7 +55,7 @@ class TorrentTransporterTest {
                 .getPath());
         Files.copy(source, sharedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         sharedFile.deleteOnExit();
-        final Torrent torrent = SharedTorrent.create(sharedFile, null, "regah");
+        final Torrent torrent = Torrent.create(sharedFile, null, "regah");
 
         final TorrentSeeder seeder = new TorrentSeeder();
         final Peer peer = seeder.seedSharedTorrent(300, new SharedTorrent(torrent, sharedFile.getParentFile()), InetAddress.getByName("0.0.0.0"));
@@ -77,7 +79,7 @@ class TorrentTransporterTest {
                 .getPath());
         Files.copy(source, sharedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         sharedFile.deleteOnExit();
-        final Torrent torrent = SharedTorrent.create(sharedFile, null, "regah");
+        final Torrent torrent = Torrent.create(sharedFile, null, "regah");
         final TorrentTransportData transportData = (TorrentTransportData) new TorrentTransporter()
                 .dataForDownloading(sharedFile);
 
@@ -100,7 +102,7 @@ class TorrentTransporterTest {
                 .getPath());
         Files.copy(source, sharedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         sharedFile.deleteOnExit();
-        final Torrent torrent = SharedTorrent.create(sharedFile, null, "regah");
+        final Torrent torrent = Torrent.create(sharedFile, null, "regah");
 
         final TorrentSeeder seeder = new TorrentSeeder();
         final Peer peer = seeder.seedSharedTorrent(60, new SharedTorrent(torrent, sharedFile.getParentFile()), InetAddress.getByName("0.0.0.0"));
@@ -113,6 +115,6 @@ class TorrentTransporterTest {
         final byte[] originalHash = md.digest(Files.readAllBytes(sharedFile.toPath()));
         final File targetFile = temporaryFolderDownloader.resolve(sharedFile.getName()).toFile();
         final byte[] resultHash = md.digest(Files.readAllBytes(targetFile.toPath()));
-        assertArrayEquals(originalHash, resultHash);
+        assertArrayEquals(originalHash, resultHash, "Downloaded file's hash doesn't match the origin file's.");
     }
 }

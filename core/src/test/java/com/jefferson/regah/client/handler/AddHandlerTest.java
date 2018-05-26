@@ -2,6 +2,7 @@ package com.jefferson.regah.client.handler;
 
 import com.google.gson.Gson;
 import com.jefferson.regah.SharedResources;
+import com.jefferson.regah.handler.ErrorWrappingHandler;
 import com.jefferson.regah.handler.Responder;
 import com.jefferson.regah.server.handler.HttpConstants;
 import com.sun.net.httpserver.Headers;
@@ -10,8 +11,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.AdditionalMatchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.io.*;
@@ -58,9 +59,9 @@ class AddHandlerTest {
     void errorWhenContentNotJson() throws IOException {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(null);
 
-        addHandler.handle(exchange);
+        new ErrorWrappingHandler(addHandler).handle(exchange);
 
-        verify(exchange).sendResponseHeaders(Mockito.eq(400), AdditionalMatchers.gt(0L));
+        verify(exchange).sendResponseHeaders(ArgumentMatchers.eq(400), AdditionalMatchers.gt(0L));
     }
 
     @Test
@@ -69,9 +70,9 @@ class AddHandlerTest {
         final InputStream requestBody = new ByteArrayInputStream("{}".getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(requestBody);
 
-        addHandler.handle(exchange);
+        new ErrorWrappingHandler(addHandler).handle(exchange);
 
-        verify(exchange).sendResponseHeaders(Mockito.eq(400), AdditionalMatchers.gt(0L));
+        verify(exchange).sendResponseHeaders(ArgumentMatchers.eq(400), AdditionalMatchers.gt(0L));
     }
 
     @Test
@@ -81,9 +82,9 @@ class AddHandlerTest {
         final InputStream requestBody = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(requestBody);
 
-        addHandler.handle(exchange);
+        new ErrorWrappingHandler(addHandler).handle(exchange);
 
-        verify(exchange).sendResponseHeaders(Mockito.eq(400), AdditionalMatchers.gt(0L));
+        verify(exchange).sendResponseHeaders(ArgumentMatchers.eq(400), AdditionalMatchers.gt(0L));
     }
 
     @Test
@@ -92,13 +93,13 @@ class AddHandlerTest {
         final Map<String, List> parameters = Map.of("paths", Collections.emptyList());
         final InputStream requestBody = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(requestBody);
-        addHandler.handle(exchange);
+        new ErrorWrappingHandler(addHandler).handle(exchange);
 
-        verify(exchange).sendResponseHeaders(Mockito.eq(200), Mockito.eq(0L));
+        verify(exchange).sendResponseHeaders(ArgumentMatchers.eq(200), ArgumentMatchers.eq(0L));
     }
 
     @Test
-    void shareIsCalledWithInputPath() throws IOException {
+    void shareIsCalledWithInputPath() {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
 
         final String path = "/";
@@ -107,13 +108,13 @@ class AddHandlerTest {
         final InputStream inputStream = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(inputStream);
 
-        addHandler.handle(exchange);
+        new ErrorWrappingHandler(addHandler).handle(exchange);
 
         verify(sharedResources).share(new File(path));
     }
 
     @Test
-    void shareIsCalledWithAllPassedPaths() throws IOException {
+    void shareIsCalledWithAllPassedPaths() {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
 
         final List<String> paths = List.of("/share/ForSharing.txt", "/share/subFolder");
@@ -122,7 +123,7 @@ class AddHandlerTest {
         final InputStream inputStream = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(inputStream);
 
-        addHandler.handle(exchange);
+        new ErrorWrappingHandler(addHandler).handle(exchange);
 
         for (final String s : paths) {
             verify(sharedResources).share(new File(s));
