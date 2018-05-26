@@ -4,10 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
-import com.jefferson.regah.handler.Responder;
+import com.jefferson.regah.handler.Handler;
 import com.jefferson.regah.server.handler.HttpConstants;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,22 +19,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class AddHandler implements HttpHandler {
+public class AddHandler implements Handler {
     private static final Logger log = LogManager.getLogger(AddHandler.class);
     private static final Gson gson = new Gson();
 
     private static final String FILE_PATHS_PARAMETER = "paths";
 
     private final SharedResources sharedResources;
-    private final Responder responder;
 
-    public AddHandler(SharedResources sharedResources, Responder responder) {
+    public AddHandler(SharedResources sharedResources) {
         this.sharedResources = sharedResources;
-        this.responder = responder;
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public String handleHttpRequest(HttpExchange exchange) throws IOException {
         log.info("Got a request to add resources");
 
         // TODO: refactor out common logic between add/list handlers (will also be used for a future 'remove' handler)
@@ -43,7 +40,7 @@ public class AddHandler implements HttpHandler {
 
         final List<String> paths = parseRequestParameters(exchange);
         if (paths == null) {
-            return;
+            return "";
         }
 
         if (paths.isEmpty()) {
@@ -52,7 +49,7 @@ public class AddHandler implements HttpHandler {
             act(paths);
         }
 
-        responder.respondeWithJson(exchange, "", 200);
+        return "";
     }
 
     private List<String> parseRequestParameters(HttpExchange exchange) throws IOException {

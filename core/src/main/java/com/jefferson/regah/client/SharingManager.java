@@ -3,7 +3,6 @@ package com.jefferson.regah.client;
 import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.client.handler.AddHandler;
 import com.jefferson.regah.handler.ErrorWrappingHandler;
-import com.jefferson.regah.handler.Responder;
 import com.jefferson.regah.http.Server;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -22,7 +21,7 @@ public class SharingManager {
 
     public void start() {
         final Map<String, HttpHandler> handlers = Map.of(
-                "/add", new ErrorWrappingHandler(new AddHandler(sharedResources, new Responder())));
+                "/add", new ErrorWrappingHandler(new AddHandler(sharedResources)));
 
         server.start(handlers);
     }

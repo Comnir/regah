@@ -3,7 +3,6 @@ package com.jefferson.regah.client.handler;
 import com.google.gson.Gson;
 import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.handler.ErrorWrappingHandler;
-import com.jefferson.regah.handler.Responder;
 import com.jefferson.regah.server.handler.HttpConstants;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -52,7 +51,7 @@ class AddHandlerTest {
         when(exchange.getResponseHeaders()).thenReturn(responseHeaders);
         when(exchange.getResponseBody()).thenReturn(responseBody);
 
-        addHandler = new AddHandler(sharedResources, new Responder());
+        addHandler = new AddHandler(sharedResources);
     }
 
     @Test

@@ -7,13 +7,22 @@ import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ErrorWrappingHandler implements HttpHandler {
+public class ErrorWrappingHandler<T> implements HttpHandler {
     private static final Logger log = LogManager.getLogger(ErrorWrappingHandler.class);
     private final HttpHandler handler;
+
+    private final Handler resultingHandler;
+
     private final Responder responder = new Responder();
 
     public ErrorWrappingHandler(HttpHandler handler) {
         this.handler = handler;
+        this.resultingHandler = null;
+    }
+
+    public ErrorWrappingHandler(Handler resultingHandler) {
+        this.handler = null;
+        this.resultingHandler = resultingHandler;
     }
 
     @Override
@@ -22,7 +31,13 @@ public class ErrorWrappingHandler implements HttpHandler {
             throw new IllegalArgumentException("Got null as argument.");
         }
         try {
-            handler.handle(exchange);
+            if (null != handler) {
+                handler.handle(exchange);
+            }
+            if (null != resultingHandler) {
+                final String jsonResponse = resultingHandler.handleHttpRequest(exchange);
+                responder.respondeWithJson(exchange, jsonResponse, 200);
+            }
         } catch (InvalidRequest e) {
             log.error("Got an invalid request. ", e);
             responder.respondeWithJson(exchange, e.getMessage(), 400);
