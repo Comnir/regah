@@ -6,12 +6,11 @@ import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.client.handler.InvalidRequest;
 import com.jefferson.regah.client.handler.RequestProcessingFailed;
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
-import com.jefferson.regah.handler.Responder;
+import com.jefferson.regah.handler.Handler;
 import com.jefferson.regah.transport.FailureToPrepareForDownload;
 import com.jefferson.regah.transport.Transporter;
 import com.jefferson.regah.transport.serialization.TransportDataSerializer;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class PrepareResourceForDownloadHandler implements HttpHandler {
+public class PrepareResourceForDownloadHandler implements Handler {
     private static final Logger log = LogManager.getLogger(PrepareResourceForDownloadHandler.class);
     private final static Gson gson = new Gson();
 
@@ -32,18 +31,16 @@ public class PrepareResourceForDownloadHandler implements HttpHandler {
 
     private final SharedResources sharedResources;
     private final Transporter transporter;
-    private final Responder responder;
     private final ImmutableWrapper<Supplier<TransportDataSerializer>> transportDataConverterCreator;
 
-    public PrepareResourceForDownloadHandler(SharedResources sharedResources, Transporter transporter, Responder responder) {
+    public PrepareResourceForDownloadHandler(SharedResources sharedResources, Transporter transporter) {
         this.sharedResources = sharedResources;
         this.transporter = transporter;
-        this.responder = responder;
         transportDataConverterCreator = new ImmutableWrapper<>();
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public String handleHttpRequest(HttpExchange exchange) throws IOException {
         log.info("Fetch resources request");
         log.debug("Headers: " + exchange.getRequestHeaders());
 
@@ -57,9 +54,7 @@ public class PrepareResourceForDownloadHandler implements HttpHandler {
         }
 
         try {
-            responder.respondeWithJson(exchange,
-                    createTransportDataConverter().toJson(transporter.dataForDownloading(file)),
-                    200);
+            return createTransportDataConverter().toJson(transporter.dataForDownloading(file));
         } catch (FailureToPrepareForDownload e) {
             throw new RequestProcessingFailed("Failed to prepare requested file for download. " + e.getMessage());
         }

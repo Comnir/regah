@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 public class Responder {
     private static final Logger log = LogManager.getLogger(Responder.class);
 
-    public Responder() {
+    Responder() {
     }
 
     public void respondeWithJson(HttpExchange exchange, String responseJson, int responseCode) {

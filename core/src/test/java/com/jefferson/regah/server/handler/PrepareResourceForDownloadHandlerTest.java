@@ -3,7 +3,6 @@ package com.jefferson.regah.server.handler;
 import com.google.gson.Gson;
 import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.handler.ErrorWrappingHandler;
-import com.jefferson.regah.handler.Responder;
 import com.jefferson.regah.transport.FailureToPrepareForDownload;
 import com.jefferson.regah.transport.Transporter;
 import com.jefferson.regah.transport.serialization.TransportDataSerializer;
@@ -54,7 +53,7 @@ class PrepareResourceForDownloadHandlerTest {
         when(exchange.getRequestHeaders()).thenReturn(requestHeaders);
 
         new ErrorWrappingHandler(
-                new PrepareResourceForDownloadHandler(sharedResources, transporter, new Responder()))
+                new PrepareResourceForDownloadHandler(sharedResources, transporter))
                 .handle(exchange);
 
         verify(exchange).sendResponseHeaders(ArgumentMatchers.eq(400), AdditionalMatchers.gt(0L));
@@ -74,7 +73,7 @@ class PrepareResourceForDownloadHandlerTest {
 
         // call with the given request
         new ErrorWrappingHandler(
-                new PrepareResourceForDownloadHandler(sharedResources, transporter, new Responder()))
+                new PrepareResourceForDownloadHandler(sharedResources, transporter))
                 .handle(exchange);
 
         // verify behaviour
@@ -93,7 +92,7 @@ class PrepareResourceForDownloadHandlerTest {
         when(sharedResources.isShared(expectedFile)).thenReturn(true);
 
         // call with the given request
-        final PrepareResourceForDownloadHandler prepareResourceForDownloadHandler = new PrepareResourceForDownloadHandler(sharedResources, transporter, new Responder());
+        final PrepareResourceForDownloadHandler prepareResourceForDownloadHandler = new PrepareResourceForDownloadHandler(sharedResources, transporter);
         final TransportDataSerializer transportDataSerializer = mock(TransportDataSerializer.class);
         when(transportDataSerializer.toJson(any())).thenReturn("{}");
 
@@ -115,7 +114,7 @@ class PrepareResourceForDownloadHandlerTest {
         final String expectedJson = "{\"mocked\":\"1\"}";
 
         // call with the given request
-        final PrepareResourceForDownloadHandler prepareResourceForDownloadHandler = new PrepareResourceForDownloadHandler(sharedResources, transporter, new Responder());
+        final PrepareResourceForDownloadHandler prepareResourceForDownloadHandler = new PrepareResourceForDownloadHandler(sharedResources, transporter);
         final TransportDataSerializer transportDataSerializer = mock(TransportDataSerializer.class);
         when(transportDataSerializer.toJson(any())).thenReturn(expectedJson);
         prepareResourceForDownloadHandler.setTransportDataConverterCreator(() -> transportDataSerializer);
@@ -137,7 +136,7 @@ class PrepareResourceForDownloadHandlerTest {
 
         // call with the given request
         new ErrorWrappingHandler(
-                new PrepareResourceForDownloadHandler(sharedResources, transporter, new Responder()))
+                new PrepareResourceForDownloadHandler(sharedResources, transporter))
                 .handle(exchange);
 
         verify(exchange).sendResponseHeaders(ArgumentMatchers.eq(503), AdditionalMatchers.gt(0L));
