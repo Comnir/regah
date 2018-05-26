@@ -51,7 +51,7 @@ class ListResourcesHandlerTest {
         when(exchange.getResponseHeaders()).thenReturn(responseHeadrs);
         when(exchange.getResponseBody()).thenReturn(responseBody);
 
-        listResourcesHandler = new ListResourcesHandler(shareResource, responder);
+        listResourcesHandler = new ListResourcesHandler(shareResource);
     }
 
     @AfterEach
@@ -63,7 +63,10 @@ class ListResourcesHandlerTest {
         when(requestHeaders.getFirst(CONTENT_TYPE)).thenReturn(APPLICATION_JSON);
         when(shareResource.getResources()).thenReturn(Collections.emptySet());
 
-        new ErrorWrappingHandler(listResourcesHandler).handle(exchange);
+        ErrorWrappingHandler.builder(listResourcesHandler)
+                .setResponder(responder)
+                .build()
+                .handle(exchange);
 
         final String jsonResult = asJson(Map.of("results", Collections.emptySet()));
         verify(responder).respondeWithJson(ArgumentMatchers.eq(exchange), ArgumentMatchers.eq(jsonResult), ArgumentMatchers.eq(200));
@@ -78,7 +81,10 @@ class ListResourcesHandlerTest {
                 .collect(Collectors.toSet());
         when(shareResource.getResources()).thenReturn(files);
 
-        new ErrorWrappingHandler(listResourcesHandler).handle(exchange);
+        ErrorWrappingHandler.builder(listResourcesHandler)
+                .setResponder(responder)
+                .build()
+                .handle(exchange);
 
         verify(responder).respondeWithJson(exchange, gson.toJson(Map.of("results", files)), 200);
     }

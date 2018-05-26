@@ -33,7 +33,7 @@ public class SharingServer {
 
     public void start() {
         final Map<String, HttpHandler> handlers = Map.of(
-                "/listShared", new ErrorWrappingHandler(new ListResourcesHandler(sharedResources, new Responder())),
+                "/listShared", new ErrorWrappingHandler(new ListResourcesHandler(sharedResources)),
                 "/prepareResourceForDownload", new ErrorWrappingHandler(new PrepareResourceForDownloadHandler(sharedResources,
                         new TorrentTransporter(), new Responder())));
 
