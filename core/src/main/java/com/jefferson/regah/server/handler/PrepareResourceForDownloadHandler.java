@@ -18,7 +18,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -40,13 +42,17 @@ public class PrepareResourceForDownloadHandler implements Handler {
     }
 
     @Override
-    public String handleHttpRequest(HttpExchange exchange) throws IOException {
+    public String handleHttpRequest(final HttpExchange exchange) throws IOException {
         log.info("Fetch resources request");
         log.debug("Headers: " + exchange.getRequestHeaders());
 
         verifyRequest(exchange);
 
         final Map<String, String> parameters = parseRequestParameters(exchange);
+        return act(parameters);
+    }
+
+    private String act(Map<String, String> parameters) {
         final File file = new File(parameters.get(FILE_PATH_PARAMETER));
 
         if (!sharedResources.isShared(file)) {
@@ -61,13 +67,22 @@ public class PrepareResourceForDownloadHandler implements Handler {
     }
 
     private Map<String, String> parseRequestParameters(HttpExchange exchange) throws IOException {
-        final StringBuilder stringBuilder = new StringBuilder();
+        final String request;
         try (final BufferedReader bufferedReader = new BufferedReader(
                 new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8))) {
-            stringBuilder.append(bufferedReader.readLine());
+            request = bufferedReader.readLine();
         }
-        return gson.fromJson(stringBuilder.toString(),
-                TypeToken.getParameterized(Map.class, String.class, String.class).getType());
+
+        final Optional<Type> optionalType = typeForJsonParsing();
+        if (optionalType.isPresent()) {
+            return gson.fromJson(request, optionalType.get());
+        }
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public Optional<Type> typeForJsonParsing() {
+        return Optional.of(TypeToken.getParameterized(Map.class, String.class, String.class).getType());
     }
 
     private void verifyRequest(HttpExchange exchange) {

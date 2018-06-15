@@ -69,7 +69,7 @@ class ListResourcesHandlerTest {
                 .handle(exchange);
 
         final String jsonResult = asJson(Map.of("results", Collections.emptySet()));
-        verify(responder).respondeWithJson(ArgumentMatchers.eq(exchange), ArgumentMatchers.eq(jsonResult), ArgumentMatchers.eq(200));
+        verify(responder).respondWithJson(ArgumentMatchers.eq(exchange), ArgumentMatchers.eq(jsonResult), ArgumentMatchers.eq(200));
     }
 
     @Test
@@ -86,7 +86,7 @@ class ListResourcesHandlerTest {
                 .build()
                 .handle(exchange);
 
-        verify(responder).respondeWithJson(exchange, gson.toJson(Map.of("results", files)), 200);
+        verify(responder).respondWithJson(exchange, gson.toJson(Map.of("results", files)), 200);
     }
 
     private String asJson(Map<String, Object> map) {

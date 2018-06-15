@@ -40,17 +40,17 @@ public class ErrorWrappingHandler<T> implements HttpHandler {
             }
             if (null != resultingHandler) {
                 final String jsonResponse = resultingHandler.handleHttpRequest(exchange);
-                responder.respondeWithJson(exchange, jsonResponse, 200);
+                responder.respondWithJson(exchange, jsonResponse, 200);
             }
         } catch (InvalidRequest e) {
             log.error("Got an invalid request. ", e);
-            responder.respondeWithJson(exchange, e.getMessage(), 400);
+            responder.respondWithJson(exchange, e.getMessage(), 400);
         } catch (RequestProcessingFailed e) {
             log.error("Request handling failed", e);
-            responder.respondeWithJson(exchange, e.getMessage(), 503);
+            responder.respondWithJson(exchange, e.getMessage(), 503);
         } catch (Exception e) {
             log.error("Request handling failed", e);
-            responder.respondeWithJson(exchange,
+            responder.respondWithJson(exchange,
                     "Error encountered while processing the request. " + e.getMessage(),
                     400);
         }

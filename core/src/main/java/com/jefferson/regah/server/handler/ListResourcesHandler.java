@@ -7,7 +7,9 @@ import com.sun.net.httpserver.HttpExchange;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.Optional;
 
 public class ListResourcesHandler implements Handler {
     private static final Logger log = LogManager.getLogger(ListResourcesHandler.class);
@@ -28,5 +30,10 @@ public class ListResourcesHandler implements Handler {
         log.trace("Response: " + response);
 
         return response;
+    }
+
+    @Override
+    public Optional<Type> typeForJsonParsing() {
+        return Optional.empty();
     }
 }

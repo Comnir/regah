@@ -1,7 +1,6 @@
 package com.jefferson.regah.client.handler;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.handler.Handler;
@@ -14,7 +13,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,37 +39,29 @@ public class AddHandler implements Handler {
         // TODO: refactor out common logic between add/list handlers (will also be used for a future 'remove' handler)
         verifyRequest(exchange);
 
-        final List<String> paths = parseRequestParameters(exchange);
-        if (paths == null) {
-            return "";
-        }
-
-        if (paths.isEmpty()) {
-            log.warn("Add request got no paths to add.");
-        } else {
-            act(paths);
-        }
-
-        return "";
-    }
-
-    private List<String> parseRequestParameters(HttpExchange exchange) throws IOException {
-        final String requestBody = readRequestBody(exchange);
-
-        final Map<String, List<String>> parameters;
-        try {
-            parameters = gson.fromJson(requestBody,
-                    TypeToken.getParameterized(Map.class, String.class, List.class).getType());
-        } catch (JsonSyntaxException e) {
-            throw new InvalidRequest("Failed to parse request body as JSON - expected '" + FILE_PATHS_PARAMETER + "' with a list of paths.", e);
-        }
+        final Map<String, List<String>> parameters = parseRequestParameters(exchange);
         final List<String> paths = parameters.get(FILE_PATHS_PARAMETER);
 
         if (null == paths) {
             throw new InvalidRequest("Error: Missing '" + FILE_PATHS_PARAMETER + "' parameter");
 
         }
-        return paths;
+
+        return act(paths);
+    }
+
+    private Map<String, List<String>> parseRequestParameters(HttpExchange exchange) throws IOException {
+        final String requestBody = readRequestBody(exchange);
+        final Optional<Type> type = typeForJsonParsing();
+        if (type.isPresent()) {
+            return gson.fromJson(requestBody, type.get());
+        }
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public Optional<Type> typeForJsonParsing() {
+        return Optional.of(TypeToken.getParameterized(Map.class, String.class, List.class).getType());
     }
 
     private void verifyRequest(HttpExchange exchange) {
@@ -77,11 +70,28 @@ public class AddHandler implements Handler {
         }
     }
 
-    private void act(final List<String> paths) {
-        log.trace("Add request - got paths to add: " + paths);
-        paths.stream()
-                .map(File::new)
-                .forEach(sharedResources::share);
+    private boolean isJsonContentType(HttpExchange exchange) {
+        return Optional
+                .ofNullable(exchange.getRequestHeaders().getFirst(HttpConstants.CONTENT_TYPE))
+                .filter(type -> type.startsWith(HttpConstants.APPLICATION_JSON))
+                .isPresent();
+    }
+
+    private String act(final List<String> paths) {
+        if (paths == null) {
+            return "";
+        }
+
+        if (paths.isEmpty()) {
+            log.warn("Add request got no paths to add.");
+        } else {
+            log.trace("Add request - got paths to add: " + paths);
+            paths.stream()
+                    .map(File::new)
+                    .forEach(sharedResources::share);
+        }
+
+        return "";
     }
 
     private String readRequestBody(HttpExchange exchange) throws IOException {
@@ -94,12 +104,5 @@ public class AddHandler implements Handler {
         final String requestBody = stringBuilder.toString();
         log.trace(String.format("Add request - request body: %s", requestBody));
         return requestBody;
-    }
-
-    private boolean isJsonContentType(HttpExchange exchange) {
-        return Optional
-                .ofNullable(exchange.getRequestHeaders().getFirst(HttpConstants.CONTENT_TYPE))
-                .filter(type -> type.startsWith(HttpConstants.APPLICATION_JSON))
-                .isPresent();
     }
 }
