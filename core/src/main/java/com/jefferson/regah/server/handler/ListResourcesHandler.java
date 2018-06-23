@@ -39,6 +39,7 @@ public class ListResourcesHandler implements Handler {
 
     @Override
     public String act(Object parameters) {
-        return "";
+        final String response = gson.toJson(Map.of("results", sharedResources.getResources()));
+        return response;
     }
 }

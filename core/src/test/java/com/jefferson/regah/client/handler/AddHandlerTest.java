@@ -61,7 +61,9 @@ class AddHandlerTest {
 
         new ErrorWrappingHandler(addHandler, responder).handle(exchange);
 
-        verify(responder).respondWithJson(exchange, "Invalid request!", 400);
+        final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(responder).respondWithJson(eq(exchange), captor.capture(), eq(400));
+        assertThat(captor.getValue(), StringContains.containsString("Expected request with JSON content"));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.jefferson.regah.handler;
 
+import com.jefferson.regah.client.BaseHandler;
 import com.jefferson.regah.client.handler.InvalidRequest;
 import com.jefferson.regah.client.handler.RequestProcessingFailed;
 import com.sun.net.httpserver.HttpExchange;
@@ -29,7 +30,7 @@ public class ErrorWrappingHandler<T> implements HttpHandler {
             throw new IllegalArgumentException("Got null as argument.");
         }
         try {
-            final String jsonResponse = resultingHandler.handleHttpRequest(exchange);
+            final String jsonResponse = new BaseHandler<T>(resultingHandler).doHandle(exchange);
             responder.respondWithJson(exchange, jsonResponse, 200);
         } catch (InvalidRequest e) {
             log.error("Got an invalid request. ", e);

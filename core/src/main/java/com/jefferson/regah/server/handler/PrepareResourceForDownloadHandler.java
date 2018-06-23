@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class PrepareResourceForDownloadHandler implements Handler<File> {
+public class PrepareResourceForDownloadHandler implements Handler<Map<String, String>> {
     private static final Logger log = LogManager.getLogger(PrepareResourceForDownloadHandler.class);
     private final static Gson gson = new Gson();
 
@@ -42,7 +42,8 @@ public class PrepareResourceForDownloadHandler implements Handler<File> {
     }
 
     @Override
-    public String act(final File file) {
+    public String act(final Map<String, String> parameters) {
+        final File file = new File(parameters.get(FILE_PATH_PARAMETER));
         if (!sharedResources.isShared(file)) {
             throw new InvalidRequest("Requested file is not shared.");
         }
@@ -85,7 +86,7 @@ public class PrepareResourceForDownloadHandler implements Handler<File> {
         verifyRequest(exchange);
 
         final Map<String, String> parameters = parseRequestParameters(exchange);
-        return act(new File(parameters.get(FILE_PATH_PARAMETER)));
+        return act(null);
     }
 
     private void verifyRequest(HttpExchange exchange) {

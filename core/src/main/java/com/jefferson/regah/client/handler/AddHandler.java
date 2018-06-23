@@ -1,7 +1,6 @@
 package com.jefferson.regah.client.handler;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.handler.Handler;
@@ -16,12 +15,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class AddHandler implements Handler<List<String>> {
+public class AddHandler implements Handler<Map<String, List<String>>> {
     private static final Logger log = LogManager.getLogger(AddHandler.class);
     private static final Gson gson = new Gson();
 
@@ -34,34 +32,35 @@ public class AddHandler implements Handler<List<String>> {
     }
 
     @Override
-    public String handleHttpRequest(HttpExchange exchange) throws IOException {
+    public String handleHttpRequest(HttpExchange exchange) {
         log.info("Got a request to add resources");
 
         // TODO: refactor out common logic between add/list handlers (will also be used for a future 'remove' handler)
         verifyRequest(exchange);
 
         final Map<String, List<String>> parameters = parseRequestParameters(exchange);
-        final List<String> paths = parameters.get(FILE_PATHS_PARAMETER);
 
-        if (null == paths) {
-            throw new InvalidRequest("Error: Missing '" + FILE_PATHS_PARAMETER + "' parameter");
-
-        }
-
-        return act(paths);
+        return act(parameters);
     }
 
-    private Map<String, List<String>> parseRequestParameters(HttpExchange exchange) throws IOException {
-        final String requestBody = readRequestBody(exchange);
-        final Optional<Type> type = typeForJsonParsing();
-        if (type.isPresent()) {
-            try {
-                return gson.fromJson(requestBody, type.get());
-            } catch (JsonSyntaxException ex) {
-                throw new InvalidRequest("Failed to parse JSON to type " + type);
-            }
-        }
-        return Collections.emptyMap();
+    private Map<String, List<String>> parseRequestParameters(HttpExchange exchange) {
+        throw new IllegalAccessError("Should not get here!");
+//        final String requestBody = readRequestBody(exchange);
+//        final Optional<Type> type = typeForJsonParsing();
+//        final Map<String, List<String>> parameters;
+//        if (!type.isPresent()) {
+//            return Collections.emptyMap();
+//        }
+//        try {
+//            parameters = gson.fromJson(requestBody, type.get());
+//        } catch (JsonSyntaxException ex) {
+//            throw new InvalidRequest("Failed to parse JSON to type " + type);
+//        }
+//        final List<String> paths = parameters.get(FILE_PATHS_PARAMETER);
+//
+//        if (null == paths) {
+//            throw new InvalidRequest("Error: Missing '" + FILE_PATHS_PARAMETER + "' parameter");
+//        }
     }
 
     @Override
@@ -83,9 +82,11 @@ public class AddHandler implements Handler<List<String>> {
     }
 
     @Override
-    public String act(final List<String> paths) {
-        if (paths == null) {
-            return "";
+    public String act(final Map<String, List<String>> parameters) {
+        final List<String> paths = parameters.get(FILE_PATHS_PARAMETER);
+
+        if (null == paths) {
+            throw new InvalidRequest("Error: Missing '" + FILE_PATHS_PARAMETER + "' parameter");
         }
 
         if (paths.isEmpty()) {

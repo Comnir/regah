@@ -13,8 +13,10 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -61,6 +63,7 @@ class ListResourcesHandlerTest {
     @Test
     void emptyListWhenNoSharedResources() {
         when(requestHeaders.getFirst(CONTENT_TYPE)).thenReturn(APPLICATION_JSON);
+        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)));
         when(shareResource.getResources()).thenReturn(Collections.emptySet());
 
         ErrorWrappingHandler.builder(listResourcesHandler)
@@ -75,6 +78,7 @@ class ListResourcesHandlerTest {
     @Test
     void allSharedResourcesReturned() {
         when(requestHeaders.getFirst(CONTENT_TYPE)).thenReturn(APPLICATION_JSON);
+        when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)));
         final Set<File> files = Set.of("file1", "file2", "dir1/file3", "dir2/file4")
                 .stream()
                 .map(File::new)

@@ -64,7 +64,7 @@ class PrepareResourceForDownloadHandlerTest {
 
         final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(responder).respondWithJson(eq(exchange), captor.capture(), eq(400));
-        assertThat(captor.getValue(), StringContains.containsString("Invalid request format"));
+        assertThat(captor.getValue(), StringContains.containsString("Expected request with JSON content"));
     }
 
     @Test
