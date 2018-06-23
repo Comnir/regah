@@ -10,23 +10,14 @@ import com.jefferson.regah.handler.Handler;
 import com.jefferson.regah.transport.FailureToPrepareForDownload;
 import com.jefferson.regah.transport.Transporter;
 import com.jefferson.regah.transport.serialization.TransportDataSerializer;
-import com.sun.net.httpserver.HttpExchange;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
 public class PrepareResourceForDownloadHandler implements Handler<Map<String, String>> {
-    private static final Logger log = LogManager.getLogger(PrepareResourceForDownloadHandler.class);
     private final static Gson gson = new Gson();
 
     static final String FILE_PATH_PARAMETER = "filePath";
@@ -71,41 +62,4 @@ public class PrepareResourceForDownloadHandler implements Handler<Map<String, St
         return this;
     }
 
-    private boolean isJsonContentType(HttpExchange exchange) {
-        return Optional
-                .ofNullable(exchange.getRequestHeaders().getFirst(HttpConstants.CONTENT_TYPE))
-                .filter(type -> type.startsWith(HttpConstants.APPLICATION_JSON))
-                .isPresent();
-    }
-
-    @Override
-    public String handleHttpRequest(final HttpExchange exchange) throws IOException {
-        log.info("Fetch resources request");
-        log.debug("Headers: " + exchange.getRequestHeaders());
-
-        verifyRequest(exchange);
-
-        final Map<String, String> parameters = parseRequestParameters(exchange);
-        return act(null);
-    }
-
-    private void verifyRequest(HttpExchange exchange) {
-        if (!isJsonContentType(exchange)) {
-            throw new InvalidRequest("Invalid request format!");
-        }
-    }
-
-    private Map<String, String> parseRequestParameters(HttpExchange exchange) throws IOException {
-        final String request;
-        try (final BufferedReader bufferedReader = new BufferedReader(
-                new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8))) {
-            request = bufferedReader.readLine();
-        }
-
-        final Optional<Type> optionalType = typeForJsonParsing();
-        if (optionalType.isPresent()) {
-            return gson.fromJson(request, optionalType.get());
-        }
-        return Collections.emptyMap();
-    }
 }
