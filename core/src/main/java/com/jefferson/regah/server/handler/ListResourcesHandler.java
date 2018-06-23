@@ -36,4 +36,9 @@ public class ListResourcesHandler implements Handler {
     public Optional<Type> typeForJsonParsing() {
         return Optional.empty();
     }
+
+    @Override
+    public String act(Object parameters) {
+        return "";
+    }
 }

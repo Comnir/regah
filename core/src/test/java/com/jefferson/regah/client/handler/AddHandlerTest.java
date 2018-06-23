@@ -3,25 +3,30 @@ package com.jefferson.regah.client.handler;
 import com.google.gson.Gson;
 import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.handler.ErrorWrappingHandler;
+import com.jefferson.regah.handler.Responder;
 import com.jefferson.regah.server.handler.HttpConstants;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
-import org.junit.jupiter.api.BeforeAll;
+import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.AdditionalMatchers;
-import org.mockito.ArgumentMatchers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 class AddHandlerTest {
     private final static Gson gson = new Gson();
@@ -39,11 +44,6 @@ class AddHandlerTest {
     @Mock
     private OutputStream responseBody;
 
-    @BeforeAll
-    static void setupAll() {
-        System.out.println("Start all");
-    }
-
     @BeforeEach
     void setup() {
         MockitoAnnotations.initMocks(this);
@@ -55,46 +55,57 @@ class AddHandlerTest {
     }
 
     @Test
-    void errorWhenContentNotJson() throws IOException {
+    void errorWhenContentNotJson() {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(null);
+        final Responder responder = mock(Responder.class);
 
-        new ErrorWrappingHandler(addHandler).handle(exchange);
+        new ErrorWrappingHandler(addHandler, responder).handle(exchange);
 
-        verify(exchange).sendResponseHeaders(ArgumentMatchers.eq(400), AdditionalMatchers.gt(0L));
+        verify(responder).respondWithJson(exchange, "Invalid request!", 400);
     }
 
     @Test
-    void errorWhenMissingPathsFromJson() throws IOException {
+    void errorWhenMissingPathsFromJson() {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
         final InputStream requestBody = new ByteArrayInputStream("{}".getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(requestBody);
+        final Responder responder = mock(Responder.class);
 
-        new ErrorWrappingHandler(addHandler).handle(exchange);
+        new ErrorWrappingHandler(addHandler, responder).handle(exchange);
 
-        verify(exchange).sendResponseHeaders(ArgumentMatchers.eq(400), AdditionalMatchers.gt(0L));
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(responder).respondWithJson(any(), captor.capture(), eq(400));
+
+        assertThat(captor.getValue(), StringContains.containsString("Missing"));
     }
 
     @Test
-    void errorWhenPathsIsNotAList() throws IOException {
+    void errorWhenPathsIsNotAList() {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
         final Map<String, String> parameters = Map.of("paths", "not_list");
         final InputStream requestBody = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(requestBody);
 
-        new ErrorWrappingHandler(addHandler).handle(exchange);
+        final Responder responder = mock(Responder.class);
 
-        verify(exchange).sendResponseHeaders(ArgumentMatchers.eq(400), AdditionalMatchers.gt(0L));
+        new ErrorWrappingHandler(addHandler, responder).handle(exchange);
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(responder).respondWithJson(any(), captor.capture(), eq(400));
+
+        assertThat(captor.getValue(), StringContains.containsString("Failed to parse JSON"));
     }
 
     @Test
-    void successWhenRequestHasEmptyPaths() throws IOException {
+    void successWhenRequestHasEmptyPaths() {
         when(requestHeaders.getFirst(HttpConstants.CONTENT_TYPE)).thenReturn(HttpConstants.APPLICATION_JSON);
         final Map<String, List> parameters = Map.of("paths", Collections.emptyList());
         final InputStream requestBody = new ByteArrayInputStream(gson.toJson(parameters).getBytes(StandardCharsets.UTF_8));
         when(exchange.getRequestBody()).thenReturn(requestBody);
-        new ErrorWrappingHandler(addHandler).handle(exchange);
+        final Responder responder = mock(Responder.class);
+        new ErrorWrappingHandler(addHandler, responder).handle(exchange);
 
-        verify(exchange).sendResponseHeaders(ArgumentMatchers.eq(200), ArgumentMatchers.eq(0L));
+        verify(responder).respondWithJson(any(), eq(""), eq(200));
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.jefferson.regah.client.handler;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.handler.Handler;
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class AddHandler implements Handler {
+public class AddHandler implements Handler<List<String>> {
     private static final Logger log = LogManager.getLogger(AddHandler.class);
     private static final Gson gson = new Gson();
 
@@ -54,7 +55,11 @@ public class AddHandler implements Handler {
         final String requestBody = readRequestBody(exchange);
         final Optional<Type> type = typeForJsonParsing();
         if (type.isPresent()) {
-            return gson.fromJson(requestBody, type.get());
+            try {
+                return gson.fromJson(requestBody, type.get());
+            } catch (JsonSyntaxException ex) {
+                throw new InvalidRequest("Failed to parse JSON to type " + type);
+            }
         }
         return Collections.emptyMap();
     }
@@ -77,7 +82,8 @@ public class AddHandler implements Handler {
                 .isPresent();
     }
 
-    private String act(final List<String> paths) {
+    @Override
+    public String act(final List<String> paths) {
         if (paths == null) {
             return "";
         }

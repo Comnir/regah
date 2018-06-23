@@ -7,10 +7,12 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Optional;
 
-public interface Handler extends HttpHandler {
+public interface Handler<T> extends HttpHandler {
     default String handleHttpRequest(final HttpExchange exchange) throws IOException {
         return null;
     }
+
+    String act(T parameters);
 
     Optional<Type> typeForJsonParsing();
 

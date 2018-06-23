@@ -10,7 +10,7 @@ public class InvalidRequest extends RuntimeException {
     }
 
     public InvalidRequest(String additionalMessage) {
-        super(GENERIC_ERROR + additionalMessage);
+        super(String.format("%s %s", GENERIC_ERROR, additionalMessage));
     }
 
     public InvalidRequest(String error, JsonSyntaxException e) {
