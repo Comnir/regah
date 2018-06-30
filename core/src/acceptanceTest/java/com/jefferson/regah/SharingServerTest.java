@@ -63,6 +63,7 @@ class SharingServerTest {
     @Test
     void emptyWhenNothingShared() {
         given().
+                header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON).
                 param("", "").
                 when().
                 get(String.format("http://localhost:%d/listShared", SERVER_PORT)).
@@ -85,10 +86,12 @@ class SharingServerTest {
                 .when()
                 .post(String.format("http://localhost:%d/add", MANAGEMENT_PORT));
 
-        final Response response = given().
-                param("", "").
+        final Response response =
+                given().
+                        header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON).
+                        param("", "").
                 when().
-                get(String.format("http://localhost:%d/listShared", SERVER_PORT));
+                        get(String.format("http://localhost:%d/listShared", SERVER_PORT));
 
 
         final ValidatableResponse validatableResponse = response.then().
@@ -113,7 +116,8 @@ class SharingServerTest {
                 .when()
                 .post(String.format("http://localhost:%d/add", MANAGEMENT_PORT));
 
-        final JsonPath sharedListJson = given().
+        final JsonPath sharedListJson = given()
+                .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON).
                 param("", "").
                 when().
                 get(String.format("http://localhost:%d/listShared", SERVER_PORT)).jsonPath();
