@@ -25,34 +25,11 @@ public class BaseHandler<T> {
         this.handler = handler;
     }
 
-//    public String handleHttpRequest(HttpExchange exchange) throws IOException {
-//        log.info("Got a request to add resources");
-
-    // TODO: refactor out common logic between ad@d/list handlers (will also be used for a future 'remove' handler)
-//        verifyRequest(exchange);
-//
-//        final Map<String, List<String>> parameters = parseRequestParameters(exchange);
-//        final List<String> paths = parameters.get(FILE_PATHS_PARAMETER);
-//
-//        if (null == paths) {
-//            throw new InvalidRequest("Error: Missing '" + FILE_PATHS_PARAMETER + "' parameter");
-//
-//        }
-//
-//        return act(paths);
-//    }
-
     public String doHandle(HttpExchange exchange) throws IOException {
         verifyRequest(exchange);
         T parameters = parseRequestParameters(exchange);
         return handler.act(parameters);
     }
-
-
-//    private T parseRequestParameters(final HttpExchange exchange) {
-//        handler.typeForJsonParsing();
-//        return null;
-//    }
 
     private T parseRequestParameters(HttpExchange exchange) throws IOException {
         final String requestBody = readRequestBody(exchange);
