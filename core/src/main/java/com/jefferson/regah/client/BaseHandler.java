@@ -55,7 +55,7 @@ public class BaseHandler<T> {
         }
 
         final String requestBody = stringBuilder.toString();
-        log.trace(String.format("Add request - request body: %s", requestBody));
+        log.trace(String.format("Request body: %s", requestBody));
         return requestBody;
     }
 

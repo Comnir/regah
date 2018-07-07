@@ -1,6 +1,6 @@
 package com.jefferson.regah.transport;
 
-public class InvalidTransportData extends Exception {
+public class InvalidTransportData extends RuntimeException {
     public InvalidTransportData(String s) {
         this(s, null);
     }
