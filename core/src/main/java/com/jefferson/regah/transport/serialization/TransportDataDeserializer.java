@@ -11,6 +11,7 @@ import com.jefferson.regah.transport.torrent.TorrentTransportData;
 import com.jefferson.regah.transport.torrent.TorrentTransporter;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static com.jefferson.regah.transport.serialization.Common.*;
 
@@ -37,8 +38,7 @@ public class TransportDataDeserializer {
         return transporterWrapper.get();
     }
 
-    private void init()
-            throws InvalidTransportData, UnsupportedTransportType {
+    private void init() throws InvalidTransportData, UnsupportedTransportType {
         if (transporterWrapper.isPresent() || transportDataWrapper.isPresent()) {
             return;
         }
@@ -46,16 +46,16 @@ public class TransportDataDeserializer {
         final Map<String, String> map = gson.fromJson(transportDataJson,
                 TypeToken.getParameterized(Map.class, String.class, String.class).getType());
 
-        final String transportType = map.getOrDefault(TRANSPORT_TYPE_KEY, "");
+        final String transportType = Optional.ofNullable(map.get(TRANSPORT_TYPE_KEY))
+                .filter(s -> !s.isEmpty())
+                .orElseThrow(() -> new InvalidTransportData("Missing transport data type - key: " + TRANSPORT_TYPE_KEY));
 
-        if (transportType.isEmpty()) {
-            throw new InvalidTransportData("Transport data is mising a type.");
-        }
 
         switch (transportType) {
             case TRANSPORT_TYPE_TORRENT_KEY:
                 transporterWrapper.set(new TorrentTransporter());
-                transportDataWrapper.set(gson.fromJson(map.get(TRANSPORT_DATA_KEY), TorrentTransportData.class));
+                transportDataWrapper.set(TorrentTransportData.fromJson(map.get(TRANSPORT_DATA_KEY)));
+//                transportDataWrapper.set(gson.fromJson(map.get(TRANSPORT_DATA_KEY), TorrentTransportData.class));
                 break;
             default:
                 throw new UnsupportedTransportType(String.format("Provided transport data type is unknown" +

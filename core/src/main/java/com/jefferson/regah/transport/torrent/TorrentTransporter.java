@@ -55,10 +55,8 @@ public class TorrentTransporter implements Transporter {
             final Peer localAsPeer = client.getPeerSpec();
 
             client.addObserver((observable, data) -> {
-                Client client1 = (Client) observable;
-                Client.ClientState clientState = (Client.ClientState) data;
-                float progress = client1.getTorrent().getCompletion();
-                log.debug("Seeder# State: " + clientState + " Progress update: " + progress);
+                float progress = ((Client) observable).getTorrent().getCompletion();
+                log.debug("Seeder# State: " + data + " Progress update: " + progress);
             });
 
             client.share();
