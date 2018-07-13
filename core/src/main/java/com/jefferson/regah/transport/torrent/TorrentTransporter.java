@@ -31,7 +31,7 @@ public class TorrentTransporter implements Transporter {
     private final InetAddress localAddress;
 
     public TorrentTransporter() {
-        seeders = new ConcurrentHashMap<>();
+        seeders = new ConcurrentHashMap<>(5);
         try {
             this.localAddress = InetAddress.getByName(ANY_ADDRESS);
         } catch (UnknownHostException e) {

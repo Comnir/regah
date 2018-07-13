@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -79,10 +80,11 @@ public class TorrentTransportData implements TransportData {
                 .map(o -> (TorrentTransportData) obj)
                 .filter(o -> o.getId().equals(getId()))
                 .filter(o -> o.seedingPeerDto.equals(seedingPeerDto))
+                .filter(o -> Arrays.equals(o.torrentData, torrentData))
                 .isPresent();
     }
 
-    public static TransportData fromJson(String json) {
+    public static TorrentTransportData fromJson(String json) {
         final TorrentTransportData data = gson.fromJson(json, TorrentTransportData.class);
         Objects.requireNonNull(data.getId());
         Objects.requireNonNull(data.getSeedingPeer());

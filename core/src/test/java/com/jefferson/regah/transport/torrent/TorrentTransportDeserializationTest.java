@@ -3,6 +3,8 @@ package com.jefferson.regah.transport.torrent;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.transport.TransportData;
+import com.jefferson.regah.transport.serialization.TransportDataDeserializer;
+import com.jefferson.regah.transport.serialization.TransportDataSerializer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,14 +38,6 @@ public class TorrentTransportDeserializationTest {
     }
 
     @Test
-    void transportDataFromJsonIsSerializedToOriginalJson() {
-        final TransportData transportData = TorrentTransportData.fromJson(json(validData));
-
-        assertNotNull(transportData, "Torrent transport data should be created from valid json.");
-        assertEquals(validJson, transportData.asJson(), "Serialized transport data is different from original JSON");
-    }
-
-    @Test
     void exceptionWhenTransportDataIsMissingId() {
         assertThrows(NullPointerException.class, () -> TorrentTransportData.
                 fromJson(jsonOfValidDataWithout(TorrentTransportData.ID)));
@@ -58,6 +53,37 @@ public class TorrentTransportDeserializationTest {
     void exceptionWhenTransportDataIsMissingTorrentData() {
         assertThrows(NullPointerException.class, () -> TorrentTransportData.
                 fromJson(jsonOfValidDataWithout(TorrentTransportData.TORRENT_DATA)));
+    }
+
+    @Test
+    void deserializedToCrrectTypes() {
+        final String jsonFromSerializer = new TransportDataSerializer().toJson(TorrentTransportData.fromJson(validJson));
+
+        final TransportDataDeserializer deserializer = new TransportDataDeserializer(jsonFromSerializer);
+        assertTrue(deserializer.getTransportData() instanceof TorrentTransportData,
+                "Deserializing torrent transport data should return an instance of TorrentTransportData.");
+        assertTrue(deserializer.getTransporter() instanceof TorrentTransporter,
+                "Deserializing torrent transport data should return an instance of TorrentTransporter.");
+    }
+
+
+    @Test
+    void deserializedToObjectWithCorrectValues() {
+        final TorrentTransportData data = TorrentTransportData.fromJson(validJson);
+        assertEquals("id-string", data.getId(), "ID not deserialized to correct value.");
+        assertArrayEquals(Base64.getDecoder().decode("dataAsByteArray"), data.getTorrentData(),
+                "TorrentData byte array not deserialized to correct value.");
+        assertEquals(12345, data.getSeedingPeer().getPort(), "seeding-peer port not deserialized to correct value.");
+    }
+
+    @Test
+    void serializerInvertsDeserializer() {
+        final TorrentTransportData deserializedFromOriginal = TorrentTransportData.fromJson(validJson);
+        final String jsonFromSerializer = new TransportDataSerializer().toJson(deserializedFromOriginal);
+        final TransportData deserializedFromSerialized = new TransportDataDeserializer(jsonFromSerializer).getTransportData();
+
+        assertEquals(deserializedFromOriginal, deserializedFromSerialized,
+                "TransportData from original JSON and from serialized JSON should be equal.");
     }
 
     private String json(Object o) {

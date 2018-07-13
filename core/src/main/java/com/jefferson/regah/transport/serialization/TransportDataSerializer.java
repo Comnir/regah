@@ -10,6 +10,11 @@ import java.util.Map;
 
 import static com.jefferson.regah.transport.serialization.Common.*;
 
+
+/**
+ * Serialize a {@link com.jefferson.regah.transport.TransportData} object.
+ * The method of interest is {@link TransportDataSerializer#toJson(TransportData)}
+ */
 public class TransportDataSerializer implements TransportDataVisitor {
     private static final Gson gson = new Gson();
     private final ImmutableWrapper<String> json;
@@ -22,7 +27,7 @@ public class TransportDataSerializer implements TransportDataVisitor {
     public void visit(TorrentTransportData data) {
         final Map map = Map.of(
                 TRANSPORT_TYPE_KEY, TRANSPORT_TYPE_TORRENT_KEY,
-                TRANSPORT_DATA_KEY, gson.toJson(data));
+                TRANSPORT_DATA_KEY, data.asJson());
         json.set(gson.toJson(map));
     }
 
@@ -31,6 +36,12 @@ public class TransportDataSerializer implements TransportDataVisitor {
 
     }
 
+    /**
+     * Serialize the given object as json
+     *
+     * @param transportData object to be converted
+     * @return JSON representation of the object
+     */
     public String toJson(final TransportData transportData) {
         transportData.acceptVisitor(this);
         return json.asOptional()

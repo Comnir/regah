@@ -34,7 +34,7 @@ class TransportDataDeserializerTest {
     }
 
     @Test
-    public void torrentTransportDataWhenTypeIsTorrent() throws IOException {
+    void torrentTransportDataWhenTypeIsTorrent() throws IOException {
         final Map<String, Object> validData = validTorrentTransportDataJson();
 
         final TransportData transportData = new TransportDataDeserializer(json(Map.of(Common.TRANSPORT_TYPE_KEY, Common.TRANSPORT_TYPE_TORRENT_KEY,

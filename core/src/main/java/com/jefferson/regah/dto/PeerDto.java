@@ -6,6 +6,8 @@ import com.turn.ttorrent.common.Peer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Optional;
 
 public class PeerDto {
     private static final Gson gson = new Gson();
@@ -40,5 +42,20 @@ public class PeerDto {
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return Optional.ofNullable(obj)
+                .filter(o -> o instanceof  PeerDto)
+                .map(o -> (PeerDto)o)
+                .filter(pd -> Arrays.equals(pd.ip, ip))
+                .filter(pd -> pd.port == port)
+                .isPresent();
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(ip) + port;
     }
 }
