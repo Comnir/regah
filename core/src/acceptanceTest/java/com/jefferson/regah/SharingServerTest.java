@@ -1,12 +1,10 @@
 package com.jefferson.regah;
 
 import com.google.gson.Gson;
+import com.jefferson.regah.client.handler.DownloadHandler;
 import com.jefferson.regah.server.handler.HttpConstants;
 import com.jefferson.regah.transport.InvalidTransportData;
-import com.jefferson.regah.transport.TransportData;
-import com.jefferson.regah.transport.Transporter;
 import com.jefferson.regah.transport.UnsupportedTransportType;
-import com.jefferson.regah.transport.serialization.TransportDataDeserializer;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
@@ -122,26 +120,33 @@ class SharingServerTest {
                 when().
                 get(String.format("http://localhost:%d/listShared", SERVER_PORT)).jsonPath();
 
-        String path = sharedListJson.getString("results[1].path");
+        String sourcePath = sharedListJson.getString("results[1].path");
 
-        final Response response = given()
+        final Map<String, String> mapForPrepare = Map.of("filePath", sourcePath);
+        final Response responseOnPrepare = given()
                 .header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
-                .body(new Gson().toJson(Map.of("filePath", path)))
+                .body(toJson(mapForPrepare))
                 .when()
                 .get(String.format("http://localhost:%d/prepareResourceForDownload", SERVER_PORT));
 
-        final TransportDataDeserializer deserializer = new TransportDataDeserializer(response.body().asString());
-        final TransportData data = deserializer.getTransportData();
-
-        final File sharedFile = Paths.get(path).toFile();
         final Path downloadDestination = Files.createTempDirectory("regah-test-download");
+        final Map<String, String> map = Map.of(DownloadHandler.KEY_PATH, downloadDestination.toAbsolutePath().toString(),
+                DownloadHandler.KEY_DATA, responseOnPrepare.body().asString());
 
-        final Transporter transporter = deserializer.getTransporter();//new TorrentTransporter();
-        transporter.downloadWithData(data, downloadDestination);
+        given().header(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON)
+                .body(toJson(map))
+                .when()
+                .get(String.format("http://localhost:%d/download", MANAGEMENT_PORT));
 
-        MessageDigest md = MessageDigest.getInstance("MD5");
+
+        final MessageDigest md = MessageDigest.getInstance("MD5");
+        final File sharedFile = Paths.get(sourcePath).toFile();
         final byte[] originalHash = md.digest(Files.readAllBytes(sharedFile.toPath()));
         final byte[] resultHash = md.digest(Files.readAllBytes(downloadDestination.resolve(sharedFile.getName())));
-        assertArrayEquals(originalHash, resultHash);
+        assertArrayEquals(originalHash, resultHash, "Hash of original file and downloaded file should be equal.");
+    }
+
+    private String toJson(Map<String, String> mapForPrepare) {
+        return GSON.toJson(mapForPrepare);
     }
 }

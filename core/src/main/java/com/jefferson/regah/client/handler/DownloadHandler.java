@@ -17,8 +17,8 @@ import java.util.function.Function;
 public class DownloadHandler implements Handler<Map<String, String>> {
     private static final Logger log = LogManager.getLogger(DownloadHandler.class);
 
-    static final String KEY_PATH = "path";
-    static final String KEY_DATA = "downloadData";
+    public static final String KEY_PATH = "path";
+    public static final String KEY_DATA = "downloadData";
     private final Function<String, TransportDataDeserializer> deserializerFactory;
 
     public DownloadHandler() {
