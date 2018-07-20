@@ -49,9 +49,18 @@ public class SharedResources {
         resources.remove(file);
     }
 
-    public boolean isShared(File file) {
-        final boolean shared = resources.contains(file);
-        log.trace("Checking is file shared. Result: {}, path: {}", shared, file);
-        return shared;
+    public boolean isShared(final File file) {
+        if (resources.contains(file)) {
+            log.trace("Queried file exact path is shared: {}", file);
+            return true;
+        }
+
+        // Possible optimization: for each sub-path of the given file, check whether it's shared.l
+        final boolean ancestorShared = resources.stream()
+                .anyMatch(sharedResource ->
+                        file.toPath().startsWith(sharedResource.toPath()));
+
+        log.trace("Queried file's ancestor is shared: {}. File path: {}", ancestorShared, file);
+        return ancestorShared;
     }
 }

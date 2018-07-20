@@ -98,13 +98,25 @@ class SharedResourcesTests {
     }
 
     @Test
-    void fileIsShared() {
+    void fileIsSharedWhenExactFileWasShared() {
         final File file = new File(this.getClass().getResource("/share/ForSharing.txt").getFile());
         sharedResources.share(file);
 
         Assertions.assertTrue(
                 sharedResources.isShared(file),
                 "The file should be shared"
+        );
+    }
+
+    @Test
+    void fileIsSharedWhenParentFolderWasShared() {
+        final File childFile = new File(this.getClass().getResource("/share/ForSharing.txt").getFile());
+        final File parentFolder = childFile.getParentFile();
+        sharedResources.share(parentFolder);
+
+        Assertions.assertTrue(
+                sharedResources.isShared(childFile),
+                String.format("A file should be considered 'shared' when it's parent is shared.")
         );
     }
 }
