@@ -26,6 +26,7 @@ public class BaseHandler<T> {
     }
 
     public String doHandle(HttpExchange exchange) throws IOException {
+        log.info("Handle request {} {}", exchange.getRequestMethod(), exchange.getRequestURI());
         verifyRequest(exchange);
         T parameters = parseRequestParameters(exchange);
         return handler.act(parameters);
@@ -33,6 +34,7 @@ public class BaseHandler<T> {
 
     private T parseRequestParameters(HttpExchange exchange) throws IOException {
         final String requestBody = readRequestBody(exchange);
+        log.trace("Request body: {}", requestBody);
         final Optional<Type> type = handler.typeForJsonParsing();
         if (!type.isPresent()) {
             return null;
@@ -51,7 +53,11 @@ public class BaseHandler<T> {
         final StringBuilder stringBuilder = new StringBuilder();
         try (final BufferedReader bufferedReader = new BufferedReader(
                 new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8))) {
-            stringBuilder.append(bufferedReader.readLine());
+            String line = bufferedReader.readLine();
+            while (null != line) {
+                stringBuilder.append(line);
+                line = bufferedReader.readLine();
+            }
         }
 
         final String requestBody = stringBuilder.toString();
