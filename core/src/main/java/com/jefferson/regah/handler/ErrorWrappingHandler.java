@@ -3,11 +3,13 @@ package com.jefferson.regah.handler;
 import com.jefferson.regah.client.BaseHandler;
 import com.jefferson.regah.client.handler.InvalidRequest;
 import com.jefferson.regah.client.handler.RequestProcessingFailed;
+import com.jefferson.regah.server.handler.HttpConstants;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class ErrorWrappingHandler<T> implements HttpHandler {
@@ -30,6 +32,9 @@ public class ErrorWrappingHandler<T> implements HttpHandler {
             throw new IllegalArgumentException("Got null as argument.");
         }
         try {
+            if (handleOptions(exchange)) {
+                return;
+            }
             final String jsonResponse = new BaseHandler<T>(resultingHandler).doHandle(exchange);
             responder.respondWithJson(exchange, jsonResponse, 200);
         } catch (InvalidRequest e) {
@@ -44,6 +49,20 @@ public class ErrorWrappingHandler<T> implements HttpHandler {
                     "Error encountered while processing the request. " + e.getMessage(),
                     400);
         }
+    }
+
+    private boolean handleOptions(HttpExchange exchange) throws IOException {
+        if (!"OPTIONS".equals(exchange.getRequestMethod())) {
+            return false;
+        }
+
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", HttpConstants.CONTENT_TYPE);
+        // responding to OPTIONS with content length of 0 is incorrect(?), since the browser (Chrome/Firefox)
+        // doesn't start a new request for the actual GET/POST. Changing reponse length to -1 fixed this.
+        exchange.sendResponseHeaders(200, -1);
+        return true;
     }
 
     public static Builder builder(Handler resultingHandler) {

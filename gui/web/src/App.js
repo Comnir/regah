@@ -8,7 +8,12 @@ class Resources extends React.Component {
   }
   // https://facebook.github.io/react-native/docs/network.html
   listResourcesFrom(ip) {
-    fetch('http://' + ip + ':42424/listShared', { method: 'GET' })
+    fetch('http://' + ip + ':42424/listShared', {
+         method: 'GET',
+         mode: 'cors',
+         headers: {
+                     "Content-type": "application/json; charset=utf-8"
+                 }})
       .then(results => { console.log('Got result :'); return results.json() })
       .then(data => {
         console.log('Path ' + data);
@@ -36,8 +41,9 @@ class Resources extends React.Component {
     </select>
 
     <button type="button" onClick={function () {
-      var files = document.getElementById('files');
-      window.alert(files.selectedOptions);
+      var selectedFiles = document.getElementById('files').selectedOptions;
+      window.alert([].slice
+        .call(selectedFiles).map(function(el){return el.value}));
 
     }}>Click Me!</button>
     </p>
@@ -51,12 +57,41 @@ class InputPath extends Component {
         this.state = {
           value: null,
         }
+        this.addShare = this.addShare.bind(this);
+        this.updatePath = this.updatePath.bind(this);
     }
+
+    updatePath(event) {
+        this.setState({
+          value: event.target.value,
+        });
+    }
+
+    addShare(event) {
+        alert("Get path: " + this.state.value)
+
+        fetch('http://localhost:42421/add', {
+                 method: 'POST',
+                 mode: 'cors',
+                 headers: {
+                             "Content-type": "application/json; charset=utf-8"
+                         },
+                 body: JSON.stringify({"paths":[this.state.value]})})
+              .then(results => { console.log('Got result :'); return results.json() })
+              .then(data => {
+                console.log('Path ' + this.state.value);
+                this.setState({
+                  list: data.results,
+                });
+              })
+            .catch((reason) => console.log("Error encountered while adding shared resource: " + reason.toString()));
+    }
+
     render() {
       return (
         <div className="InputPath">
-          Full path to file or folder: <input id="inputText" type="text"/>
-                  <input id="addFile" type="button" onClick="" value="Add"/>
+          Full path to file or folder: <input id="inputText" type="text" onChange={this.updatePath}/>
+                  <input id="addFile" type="button" value="Add" onClick={this.addShare} />
         </div>
       )
     }
