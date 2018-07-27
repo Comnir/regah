@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Application {
@@ -32,10 +31,21 @@ public class Application {
         parentFolderForTorrent = applicationDataFolder;
     }
 
-    public static void main(String[] args) throws IOException {
-        final File dataFolder = Files.createDirectory(Paths.get("")).toFile();
+    public static void main(String[] args) {
+        final File dataFolder = getDataFolder();
+        final Application application = new Application(dataFolder);
+        Runtime.getRuntime().addShutdownHook(new Thread(application::stop));
+        application.start();
+    }
 
-        new Application(dataFolder).start();
+    private static File getDataFolder() {
+        final File dataFolder = Paths.get(System.getProperty("user.home"), "regah").toFile();
+        if (!dataFolder.exists() && !dataFolder.mkdir()) {
+            final String message = String.format("Data folder doesn't exist and could not be created. Path: %s", dataFolder);
+            log.fatal(message);
+            throw new IllegalStateException(message);
+        }
+        return dataFolder;
     }
 
     void start() {

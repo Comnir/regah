@@ -1,6 +1,5 @@
 package com.jefferson.regah.server.handler;
 
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.client.handler.InvalidRequest;
@@ -18,7 +17,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public class PrepareResourceForDownloadHandler implements Handler<Map<String, String>> {
-    private final static Gson gson = new Gson();
 
     static final String FILE_PATH_PARAMETER = "filePath";
 
