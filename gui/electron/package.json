@@ -1,0 +1,23 @@
+{
+  "name": "regah-desktop",
+  "version": "0.0.1",
+  "description": "Regah GUI for desktop.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Comnir/regah.git"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Comnir/regah/issues"
+  },
+  "homepage": "https://github.com/Comnir/regah#readme",
+  "devDependencies": {
+    "electron": "^2.0.5"
+  }
+}
