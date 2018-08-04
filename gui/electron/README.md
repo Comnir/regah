@@ -8,6 +8,7 @@ Resources / References:
 [HTTP requests with Electron](https://electronjs.org/docs/api/client-request)
 [Electron 'net'](https://electronjs.org/docs/api/net)
 Initially, tried [Node.js http requests](https://nodejs.org/api/http.html), but it had a wierd delay before the request actually arrived at the server.
+The ['net' specs]([https://github.com/electron/electron/blob/master/spec/api-net-spec.js]) provide more usage examples.
 
 [Electron's IPC - main /renderers](https://medium.com/@hamzasurti/in-progress-6959b733a55a)
 

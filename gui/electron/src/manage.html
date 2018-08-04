@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Regah - file transfer</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 Manage local sharing - add/remove shared files/folders.
@@ -10,10 +11,16 @@ Manage local sharing - add/remove shared files/folders.
     The address of the target machine:
     <input id='input-target-address' type="text" value="localhost"/>
 </p>
-<div id="fetch-list">List shared resources from the specified address</div>
-<p id="shared-list">
 
-</p>
+<div id="select-to-add" class="button">Select a path to share</div>
+<div id="add-files" class="button" style="visibility:hidden;">Add</div>
+<div id="selected-path"></div>
+<br>
+
+<div id="fetch-list" class="button">List shared resources from the specified address</div>
+<ul id="shared-list">
+
+</ul>
 
 <!-- Load javascript after all of the page elements are available -->
 <script src="manage.js"></script>
