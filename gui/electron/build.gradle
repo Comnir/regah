@@ -10,12 +10,8 @@ node {
     nodeModulesDir = file("${project.projectDir}")
 }
 
-task build (type: NpmTask) {
-    args = ['run', 'build']
-
-    dependsOn npmInstall
-}
-
 task startGui (type: NpmTask) {
     args = ['start']
+    inputs.dir('src')
+    dependsOn npmInstall
 }
