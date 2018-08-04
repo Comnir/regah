@@ -1,5 +1,6 @@
 "use strict";
 const {app, BrowserWindow} = require('electron');
+const {net} = require('electron');
 var ipcMain = require('electron').ipcMain;
 var http = require('http')
 
@@ -37,7 +38,6 @@ ipcMain.on('open-manage-window', function () {
 
 ipcMain.on('add-files', function (event, ip, newPath) {
     console.log("Asked  to send 'add files' request with path " + newPath);
-    const {net} = require('electron');
     const jsonBody = JSON.stringify({ "paths":[newPath]});
 
     const options = {
@@ -47,49 +47,36 @@ ipcMain.on('add-files', function (event, ip, newPath) {
       method: 'POST',
       headers: {
         "Content-type": "application/json; charset=utf-8",
-//        "Content-Length": jsonBody.length
-      }/*,
-      body: jsonBody*/
+      }
     };
 
-    const request = net.request(options);
-    request.on('response', (response) => {
-        console.log('STATUS: ' + response.statusCode);
-        console.log('HEADERS: ' + JSON.stringify(response.headers));
-
-        response.setEncoding('utf8');
-        let rawData = '';
-        response.on('data', (chunk) => {
-          console.log('BODY: ' + chunk);
-          rawData += chunk;
-        });
-
-        response.on('end', () => {
-          console.log("end of response, raw response: " + rawData);
-//          const json = JSON.parse(rawData);
-//          console.log('No more data in response. After parse: ' + json);
-          event.sender.send('add-succeeded');
-        });
-    });
-    request.write(jsonBody);
-    request.end();
+    sendRequest(options, (rawData) => {
+       console.log("end of response, raw response: " + rawData);
+       event.sender.send('add-succeeded');
+    }, jsonBody)
 });
 
 ipcMain.on('fetch-list', function (event, ip) {
-    const {net} = require('electron');
-
     const options = {
       hostname: ip,
       port: 42424,
       path: '/listShared',
       method: 'GET',
       headers: {
-        "Content-type": "application/json; charset=utf-8",
-        "Content-Length": 0
+        "Content-type": "application/json; charset=utf-8"
       }
     };
 
-    const request = net.request(options);
+    sendRequest(options, (rawResponse) => {
+       console.log("end of response, raw data: " + rawResponse);
+       const json = JSON.parse(rawResponse);
+       console.log('No more data in response. After parse: ' + json);
+       event.sender.send('got-resources-list', json);
+    });
+});
+
+function sendRequest(requestOptions, onRequestEnd, requestBody) {
+    const request = net.request(requestOptions);
     request.on('response', (response) => {
         console.log('STATUS: ' + response.statusCode);
         console.log('HEADERS: ' + JSON.stringify(response.headers));
@@ -101,12 +88,11 @@ ipcMain.on('fetch-list', function (event, ip) {
           rawData += chunk;
         });
 
-        response.on('end', () => {
-          console.log("end of response, raw data: " + rawData);
-          const json = JSON.parse(rawData);
-          console.log('No more data in response. After parse: ' + json);
-          event.sender.send('got-resources-list', json);
-        });
+        response.on('end', () => onRequestEnd(rawData));
     });
+
+    if (undefined !== requestBody) {
+      request.write(requestBody);
+    }
     request.end();
-});
+}
