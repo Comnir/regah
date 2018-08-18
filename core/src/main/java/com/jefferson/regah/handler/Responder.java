@@ -26,9 +26,10 @@ public class Responder {
     private void sendResponseThrowing(HttpExchange exchange, String responseJson, int responseCode) throws IOException {
         exchange.getResponseHeaders().add(HttpConstants.CONTENT_TYPE, HttpConstants.APPLICATION_JSON);
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-        exchange.sendResponseHeaders(responseCode, responseJson.length());
+        final byte[] responseBytes = responseJson.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(responseCode, responseBytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
-            os.write(responseJson.getBytes(StandardCharsets.UTF_8));
+            os.write(responseBytes);
             os.flush();
         }
     }
