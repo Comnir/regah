@@ -12,9 +12,6 @@ Manage local sharing - add/remove shared files/folders.
     <input id='input-target-address' type="text" value="localhost"/>
 </p>
 
-<div id="select-to-add" class="button">Select a path to share</div>
-<div id="add-files" class="button" style="visibility:hidden;">Add</div>
-<div id="selected-path"></div>
 <br>
 
 <div id="fetch-list" class="button">List shared resources from the specified address</div>
@@ -22,8 +19,12 @@ Manage local sharing - add/remove shared files/folders.
 
 </select>
 
-<!-- Load javascript after all of the page elements are available -->
-<script src="manage.js"></script>
-<script src="list.js"></script>
+<div id="download" class="button">Download selected</div>
+<div id="select-destination" class="button">Select download destination</div>
+<div id="destination"></div>
+
+<!-- Load javascript after all of the page elements are available 
+<script src="list.js"></script> -->
+<script src="download.js"></script>
 </body>
 </html>

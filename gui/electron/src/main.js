@@ -1,10 +1,15 @@
 "use strict";
 const {app, BrowserWindow} = require('electron');
 const {net} = require('electron');
+const MANAGE_PORT = 42421;
+const CLIENT_PORT = 42424;
+
 var ipcMain = require('electron').ipcMain;
 var http = require('http')
 
+var mainWindow = null;
 var manageWindow = null;
+var downloadWindow = null;
 
 function createMainWindow() {
     mainWindow = new BrowserWindow({width: 800, height: 600})
@@ -18,7 +23,6 @@ function createMainWindow() {
 
 app.on('ready', createMainWindow)
 
-var mainWindow = null;
 ipcMain.on('open-manage-window', function () {
     if (manageWindow) {
         return;
@@ -36,13 +40,30 @@ ipcMain.on('open-manage-window', function () {
     });
 });
 
+ipcMain.on('open-download-window', function () {
+    if (downloadWindow) {
+        return;
+    }
+
+    downloadWindow = new BrowserWindow({
+        height: 600,
+        width: 800
+    });
+
+    downloadWindow.loadFile('src/download.html');
+
+    downloadWindow.on('closed', function () {
+        downloadWindow = null;
+    });
+});
+
 ipcMain.on('add-files', function (event, ip, newPath) {
-    console.log("Asked  to send 'add files' request with path " + newPath);
+    console.log("#add-files# Asked  to send 'add files' request with path " + newPath);
     const jsonBody = JSON.stringify({ "paths":[newPath]});
 
     const options = {
       hostname: ip,
-      port: 42421,
+      port: MANAGE_PORT,
       path: '/add',
       method: 'POST',
       headers: {
@@ -51,15 +72,16 @@ ipcMain.on('add-files', function (event, ip, newPath) {
     };
 
     sendRequest(options, (rawData) => {
-       console.log("end of response, raw response: " + rawData);
+       console.log("#add-files# end of response, raw response: " + rawData);
        event.sender.send('add-succeeded');
     }, jsonBody)
 });
 
 ipcMain.on('fetch-list', function (event, ip) {
+	console.log('will send request to fetch list');
     const options = {
       hostname: ip,
-      port: 42424,
+      port: CLIENT_PORT,
       path: '/listShared',
       method: 'GET',
       headers: {
@@ -68,11 +90,53 @@ ipcMain.on('fetch-list', function (event, ip) {
     };
 
     sendRequest(options, (rawResponse) => {
-       console.log("end of response, raw data: " + rawResponse);
+       console.log("#fetch-list# end of response, raw data: " + rawResponse);
        const json = JSON.parse(rawResponse);
-       console.log('No more data in response. After parse: ' + json);
+       console.log('#fetch-list# No more data in response. After parse: ' + json);
        event.sender.send('got-resources-list', json);
     });
+});
+
+ipcMain.on('fetch-download-info', function (event, ip, paths) {
+    const options = {
+      hostname: ip,
+      port: CLIENT_PORT,
+      path: '/prepareResourceForDownload',
+      method: 'POST',
+      headers: {
+        "Content-type": "application/json; charset=utf-8"
+      }
+    };
+    
+    var jsonBody = JSON.stringify({"filePath": paths[0]});
+
+    sendRequest(options, (rawResponse) => {
+       console.log("#fetch-download-info# end of response, raw data: " + rawResponse);
+       const json = JSON.parse(rawResponse);
+       console.log('#fetch-download-info# No more data in response. After parse: ' + json);
+       event.sender.send('got-download-info', json);
+    }, jsonBody);
+});
+
+ipcMain.on('download', function (event, ip, destination, downloadData) {
+    const options = {
+      hostname: ip,
+      port: MANAGE_PORT,
+      path: '/download',
+      method: 'POST',
+      headers: {
+        "Content-type": "application/json; charset=utf-8"
+      }
+    };
+
+    var jsonRequest = JSON.stringify({"path": destination, "downloadData": JSON.stringify(downloadData)});
+    
+    console.log('#download# send download request with JSON: ' + jsonRequest);
+    
+    sendRequest(options, (rawResponse) => {
+       console.log("#download# end of response, raw data: " + rawResponse);
+       event.sender.send('download-started');
+    }, jsonRequest);
 });
 
 function sendRequest(requestOptions, onRequestEnd, requestBody) {

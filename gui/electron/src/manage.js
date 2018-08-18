@@ -4,15 +4,9 @@ var ipcRenderer = require('electron').ipcRenderer;
 var app = require('electron').remote;
 var dialog = app.dialog;
 
-var inputTargetAddress = document.getElementById('input-target-address');
-
 var selectToAddElement = document.getElementById('select-to-add');
 var selectedFilesElement = document.getElementById("selected-path");
 var addFilesElement = document.getElementById("add-files");
-
-function fetchList() {
-  ipcRenderer.send('fetch-list', inputTargetAddress.value);
-}
 
 selectToAddElement.addEventListener('click', function () {
     var dialogOptions = {
