@@ -26,11 +26,21 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 class TorrentTransporterTest {
     private Path temporaryFolderSeeder;
     private Path temporaryFolderDownloader;
+    private File sharedFile;
+    private Torrent torrent;
 
     @BeforeEach
-    void setup() throws IOException {
+    void setup() throws IOException, NoSuchAlgorithmException, InterruptedException {
         temporaryFolderSeeder = Files.createTempDirectory("regah-test");
         temporaryFolderDownloader = Files.createTempDirectory("regah-test");
+        sharedFile = File.createTempFile("sharedFile", "txt", null);
+
+        final Path source = Paths.get(this.getClass()
+                .getResource("/share/ForSharing.txt")
+                .getPath());
+        Files.copy(source, sharedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        sharedFile.deleteOnExit();
+        torrent = Torrent.create(sharedFile, null, "regah");
     }
 
     @AfterEach
@@ -48,15 +58,7 @@ class TorrentTransporterTest {
     }
 
     @Test
-    void downloadFileWithDownloaderAndSeeder() throws IOException, NoSuchAlgorithmException, InterruptedException {
-        final File sharedFile = File.createTempFile("sharedFile", "txt", null);
-        final Path source = Paths.get(this.getClass()
-                .getResource("/share/ForSharing.txt")
-                .getPath());
-        Files.copy(source, sharedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        sharedFile.deleteOnExit();
-        final Torrent torrent = Torrent.create(sharedFile, null, "regah");
-
+    void downloadFileWithDownloaderAndSeeder() throws IOException, NoSuchAlgorithmException {
         final TorrentSeeder seeder = new TorrentSeeder();
         final Peer peer = seeder.seedSharedTorrent(300, new SharedTorrent(torrent, sharedFile.getParentFile()), InetAddress.getByName("0.0.0.0"));
 
@@ -64,22 +66,11 @@ class TorrentTransporterTest {
         final TorrentDownloader downloader = new TorrentDownloader();
         downloader.downloadSharedTorrent(downloadTorrent, peer, InetAddress.getByName("0.0.0.0"));
 
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        final byte[] originalHash = md.digest(Files.readAllBytes(sharedFile.toPath()));
-        final File targetFile = temporaryFolderDownloader.resolve(sharedFile.getName()).toFile();
-        final byte[] resultHash = md.digest(Files.readAllBytes(targetFile.toPath()));
-        assertArrayEquals(originalHash, resultHash);
+        assertDownloadedFileEqualToOrigin(sharedFile);
     }
 
     @Test
-    void downloadFileWithDownloaderAndTransporterAsSeeder() throws IOException, FailureToPrepareForDownload, NoSuchAlgorithmException, InvalidTransportData, InterruptedException {
-        final File sharedFile = File.createTempFile("sharedFile", "txt", null);
-        final Path source = Paths.get(this.getClass()
-                .getResource("/share/ForSharing.txt")
-                .getPath());
-        Files.copy(source, sharedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        sharedFile.deleteOnExit();
-        final Torrent torrent = Torrent.create(sharedFile, null, "regah");
+    void downloadFileWithDownloaderAndTransporterAsSeeder() throws IOException, FailureToPrepareForDownload, NoSuchAlgorithmException, InvalidTransportData {
         final TorrentTransportData transportData = (TorrentTransportData) new TorrentTransporter()
                 .dataForDownloading(sharedFile);
 
@@ -87,23 +78,11 @@ class TorrentTransporterTest {
         final TorrentDownloader downloader = new TorrentDownloader();
         downloader.downloadSharedTorrent(downloadTorrent, transportData.getSeedingPeer(), InetAddress.getByName("0.0.0.0"));
 
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        final byte[] originalHash = md.digest(Files.readAllBytes(sharedFile.toPath()));
-        final File targetFile = temporaryFolderDownloader.resolve(sharedFile.getName()).toFile();
-        final byte[] resultHash = md.digest(Files.readAllBytes(targetFile.toPath()));
-        assertArrayEquals(originalHash, resultHash);
+        assertDownloadedFileEqualToOrigin(sharedFile);
     }
 
     @Test
-    void downloadFileWithSeederAndTransporterAsDownloader() throws IOException, NoSuchAlgorithmException, InterruptedException {
-        final File sharedFile = File.createTempFile("sharedFile", "txt", null);
-        final Path source = Paths.get(this.getClass()
-                .getResource("/share/ForSharing.txt")
-                .getPath());
-        Files.copy(source, sharedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        sharedFile.deleteOnExit();
-        final Torrent torrent = Torrent.create(sharedFile, null, "regah");
-
+    void downloadFileWithSeederAndTransporterAsDownloader() throws IOException, NoSuchAlgorithmException {
         final TorrentSeeder seeder = new TorrentSeeder();
         final Peer peer = seeder.seedSharedTorrent(60, new SharedTorrent(torrent, sharedFile.getParentFile()), InetAddress.getByName("0.0.0.0"));
         final TorrentTransportData transportData = new TorrentTransportData("ooo", peer, torrent.getEncoded());
@@ -111,6 +90,10 @@ class TorrentTransporterTest {
         final TorrentTransporter downloader = new TorrentTransporter();
         downloader.downloadWithData(transportData, temporaryFolderDownloader);
 
+        assertDownloadedFileEqualToOrigin(sharedFile);
+    }
+
+    private void assertDownloadedFileEqualToOrigin(File sharedFile) throws NoSuchAlgorithmException, IOException {
         MessageDigest md = MessageDigest.getInstance("MD5");
         final byte[] originalHash = md.digest(Files.readAllBytes(sharedFile.toPath()));
         final File targetFile = temporaryFolderDownloader.resolve(sharedFile.getName()).toFile();
