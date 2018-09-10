@@ -11,13 +11,13 @@ class CompletingExecutor {
     private static final Logger log = LogManager.getLogger(CompletingExecutor.class);
 
     private final ExecutorService executorService;
-    private final CompletionService completionService;
+    private final CompletionService<Object> completionService;
     private final List<Future<Object>> futures;
 
     CompletingExecutor() {
         this.executorService = Executors.newCachedThreadPool();
-        this.completionService = new ExecutorCompletionService(executorService);
-        this.futures = new ArrayList<>();
+        this.completionService = new ExecutorCompletionService<>(executorService);
+        this.futures = new ArrayList<>(10);
     }
 
     void submit(Runnable runnable) {

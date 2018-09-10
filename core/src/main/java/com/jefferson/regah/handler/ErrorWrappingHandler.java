@@ -14,7 +14,7 @@ import java.util.Objects;
 
 public class ErrorWrappingHandler<T> implements HttpHandler {
     private static final Logger log = LogManager.getLogger(ErrorWrappingHandler.class);
-    private final Handler resultingHandler;
+    private final Handler<T> resultingHandler;
     private final Responder responder;
 
     public ErrorWrappingHandler(Handler resultingHandler) {
@@ -35,7 +35,7 @@ public class ErrorWrappingHandler<T> implements HttpHandler {
             if (handleOptions(exchange)) {
                 return;
             }
-            final String jsonResponse = new BaseHandler<T>(resultingHandler).doHandle(exchange);
+            final String jsonResponse = new BaseHandler<>(resultingHandler).doHandle(exchange);
             responder.respondWithJson(exchange, jsonResponse, 200);
         } catch (InvalidRequest e) {
             log.error("Got an invalid request. ", e);

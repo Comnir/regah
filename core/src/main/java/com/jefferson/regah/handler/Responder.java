@@ -28,7 +28,7 @@ public class Responder {
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         final byte[] responseBytes = responseJson.getBytes(StandardCharsets.UTF_8);
         exchange.sendResponseHeaders(responseCode, responseBytes.length);
-        try (OutputStream os = exchange.getResponseBody()) {
+        try (final OutputStream os = exchange.getResponseBody()) {
             os.write(responseBytes);
             os.flush();
         }
