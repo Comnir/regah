@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -22,6 +23,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TorrentTransporter implements Transporter {
     private static final Logger log = LogManager.getLogger(TorrentTransporter.class);
@@ -44,12 +47,19 @@ public class TorrentTransporter implements Transporter {
         final String uuid = UUID.randomUUID().toString();
         try {
             final File torrentFile = File.createTempFile("download-" + uuid + "-", ".torrent");
-            final Torrent torrent = Torrent.create(file, null, "regah");
+            final Torrent torrent;
+            final SharedTorrent sharedTorrent;
+            if (file.isFile()) {
+                torrent = Torrent.create(file, null, "regah");
+                sharedTorrent = new SharedTorrent(torrent, file.getParentFile(), true);
+            } else {
+                final List<File> fileListing = listFolderContentsRecursively(file);
+                torrent = Torrent.create(file, fileListing, null, "regah");
+                sharedTorrent = new SharedTorrent(torrent, file.getParentFile(), true);
+            }
             try (final OutputStream os = new FileOutputStream(torrentFile)) {
                 torrent.save(os);
             }
-
-            final SharedTorrent sharedTorrent = new SharedTorrent(torrent, file.getParentFile(), true);
 
             final Client client = new Client(localAddress, sharedTorrent);
             final Peer localAsPeer = client.getPeerSpec();
@@ -71,6 +81,15 @@ public class TorrentTransporter implements Transporter {
             final String message = "Error encountered while preparing file for download";
             log.warn(message, e);
             throw new FailureToPrepareForDownload(message, e);
+        }
+    }
+
+    private List<File> listFolderContentsRecursively(final File folder) throws IOException {
+        try (final Stream<Path> folderContents = Files.walk(folder.toPath())) {
+            return folderContents
+                    .map(Path::toFile)
+                    .filter(File::isFile)
+                    .collect(Collectors.toList());
         }
     }
 

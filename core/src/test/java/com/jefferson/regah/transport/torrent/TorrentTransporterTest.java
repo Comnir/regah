@@ -93,6 +93,17 @@ class TorrentTransporterTest {
         assertDownloadedFileEqualToOrigin(sharedFile);
     }
 
+    @Test
+    void seedAndDownloadWithTransporter() throws IOException, NoSuchAlgorithmException, FailureToPrepareForDownload {
+        final TorrentTransportData transportData = (TorrentTransportData) new TorrentTransporter()
+                .dataForDownloading(sharedFile);
+
+        final TorrentTransporter downloader = new TorrentTransporter();
+        downloader.downloadWithData(transportData, temporaryFolderDownloader);
+
+        assertDownloadedFileEqualToOrigin(sharedFile);
+    }
+
     private void assertDownloadedFileEqualToOrigin(File sharedFile) throws NoSuchAlgorithmException, IOException {
         MessageDigest md = MessageDigest.getInstance("MD5");
         final byte[] originalHash = md.digest(Files.readAllBytes(sharedFile.toPath()));
