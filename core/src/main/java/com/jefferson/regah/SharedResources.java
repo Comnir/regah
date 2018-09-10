@@ -23,7 +23,6 @@ public class SharedResources {
         }
         return resources.stream()
                 .filter(File::exists)
-                .flatMap(SharedResources::streamOfFiles)
                 .collect(Collectors.toSet());
     }
 

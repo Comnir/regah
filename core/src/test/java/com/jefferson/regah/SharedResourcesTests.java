@@ -62,16 +62,12 @@ class SharedResourcesTests {
     }
 
     @Test
-    void sharingFoldersSharesAllResourcesInside() {
+    void folderIsTheOnlyListedSharedResourceWhenSharingAfolder() {
         final File folder = new File(this.getClass().getResource("/share").getFile());
         sharedResources.share(folder);
 
         final Set<File> expected = Set.of(
-                new File(this.getClass().getResource("/share").getFile()),
-                new File(this.getClass().getResource("/share/ForSharing.txt").getFile()),
-                new File(this.getClass().getResource("/share/subFolder").getFile()),
-                new File(this.getClass().getResource("/share/subFolder/subFile1.txt").getFile()),
-                new File(this.getClass().getResource("/share/subFolder/subFile2.txt").getFile())
+                new File(this.getClass().getResource("/share").getFile())
         );
 
         final Set<File> actuallyShared = sharedResources.getResources();
@@ -85,7 +81,7 @@ class SharedResourcesTests {
                 .collect(Collectors.joining(","));
 
         Assertions.assertEquals(expected.size(), actuallyShared.size(),
-                "Shared folder doesn't match the actually shared files. Missing files: " + missingFiles
+                "When sharing a folder, only the share folder should be returned as shared. Missing files: " + missingFiles
                         + System.lineSeparator() + "Extra files: " + extraFiles);
     }
 
