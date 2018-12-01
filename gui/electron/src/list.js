@@ -19,6 +19,10 @@ fetchListElement.addEventListener('click', function () {
 ipcRenderer.on('got-resources-list', function (sender, json) {
   console.log("got resources list as json: " + json);
 
+  while (filesListSelectable.firstChild) {
+      filesListSelectable.removeChild(filesListSelectable.firstChild);
+  }
+
   for(var i=0; i<json.results.length; i++) {
    // console.log(json.results[i]);
     var newItem = document.createElement("option");
