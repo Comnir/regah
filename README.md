@@ -25,8 +25,8 @@
 The Sharing server and client can be started with the run task:
 <pre>gradlew run</pre>
 
-A web GUI can be started with the startWebGui task:
-<pre>gradlew startWebGui</pre>
+An Electron based GUI can be started with:
+<pre>gradlew startGui</pre>
 
 ### Git hooks (Linux/Mac)
 
