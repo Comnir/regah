@@ -23,7 +23,6 @@ public class Server {
     public Server(int serverPort, String description) throws IOException {
         this.serverPort = serverPort;
         this.description = description;
-        HttpServer.create();
         this.httpServer = HttpServer.create(new InetSocketAddress(this.serverPort), 10);
     }
 
