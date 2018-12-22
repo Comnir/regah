@@ -1,8 +1,10 @@
 "use strict";
 const {app, BrowserWindow} = require('electron');
 const {net} = require('electron');
-const MANAGE_PORT = 42421;
-const CLIENT_PORT = 42424;
+const Store = require('electron-store');
+const config = new Store();
+const MANAGE_PORT = config.get('local-manage-port', 32421);
+const CLIENT_PORT = config.get('local-client-port', 32424);
 
 var ipcMain = require('electron').ipcMain;
 var http = require('http')
