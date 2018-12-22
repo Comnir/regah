@@ -154,7 +154,7 @@ public class TorrentTransporter implements Transporter {
         client.download();
 
         log.info("Downloader created a torrent client. Will wait for the client to be ready for connections.");
-        final long timeout = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5);
+        final long timeout = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5);
         while (!client.readyForConnection() && timeout > System.currentTimeMillis()) {
             try {
                 Thread.sleep(1000);
