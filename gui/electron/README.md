@@ -28,3 +28,11 @@ Main takes:
 - setting event listeners in JS file:
     - get the element from the document (e.g., var e = document.getElementById)
     - add an event listener e.addEventListener('click', function...)
+
+
+On linux, starting GUI might fail with
+  regah/gui/electron/node_modules/electron/dist/electron: error while loading shared libraries: libgconf-2.so.4: cannot open shared object file: No such file or directory
+
+Install the missing library with
+  sudo apt-get install libgconf-2-4
+
