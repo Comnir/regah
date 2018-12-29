@@ -120,7 +120,7 @@ ipcMain.on('fetch-download-info', function (event, ip, paths) {
 
 ipcMain.on('download', function (event, ip, destination, downloadData) {
     const options = {
-      hostname: ip,
+      hostname: 'localhost',
       port: MANAGE_PORT,
       path: '/download',
       method: 'POST',
