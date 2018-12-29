@@ -2,6 +2,7 @@ package com.jefferson.regah.transport.torrent;
 
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
 import com.jefferson.regah.transport.*;
+import com.jefferson.regah.util.NetworkUtil;
 import com.turn.ttorrent.client.Client;
 import com.turn.ttorrent.client.SharedTorrent;
 import com.turn.ttorrent.common.Peer;
@@ -14,13 +15,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -28,19 +26,20 @@ import java.util.stream.Stream;
 
 public class TorrentTransporter implements Transporter {
     private static final Logger log = LogManager.getLogger(TorrentTransporter.class);
-    private static final String ANY_ADDRESS = "0.0.0.0";
 
     private final Map<String, Client> seeders;
     private final InetAddress localAddress;
 
     public TorrentTransporter() {
-        seeders = new ConcurrentHashMap<>(5);
-        try {
-            this.localAddress = InetAddress.getByName(ANY_ADDRESS);
-        } catch (UnknownHostException e) {
-            throw new IllegalStateException("Failed to initialize InetAddress for local host!");
-        }
+        this(NetworkUtil.addressForBinding());
     }
+
+    public TorrentTransporter(InetAddress localAddress) {
+        seeders = new ConcurrentHashMap<>(5);
+        this.localAddress = localAddress;
+
+    }
+
 
     @Override
     public TransportData dataForDownloading(File file) throws FailureToPrepareForDownload {
@@ -121,14 +120,7 @@ public class TorrentTransporter implements Transporter {
         } catch (InvalidTransportData invalidTransportData) {
             throw new IllegalArgumentException("Got torrent trasport data, but it was malformed.", invalidTransportData);
         }
-        final InetAddress address;
-        try {
-            address = InetAddress.getByName(ANY_ADDRESS);
-        } catch (UnknownHostException e) {
-            final String message = "Trying to get localhost address failed.";
-            throw new RuntimeException(message, e);
-        }
-        download(torrent, remotePeer, address);
+        download(torrent, remotePeer, localAddress);
 
         log.info("Completed downloading torrent " + data.getId());
     }
