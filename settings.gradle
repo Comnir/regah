@@ -1,8 +1,12 @@
 rootProject.name = 'regah'
 
-include ':regah-core'
-project(':regah-core').projectDir = "$rootDir/core" as File
-include 'regah-gui-electron'
-project(':regah-gui-electron').projectDir = "$rootDir/gui/electron" as File
+include 'core', 'regah-gui-electron'
 
+project(':regah-gui-electron').projectDir = file("gui/electron")
 
+gradle.ext.ttorrentFromSource = false
+// to include ttorrent from sources, enable the following. 
+// ttorrent should be in the specified path
+if (gradle.ext.ttorrentFromSource) {
+    includeBuild '../ttorrent'
+}

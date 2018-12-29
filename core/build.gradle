@@ -53,10 +53,12 @@ dependencies {
     testCompile 'org.mockito:mockito-core:2.11.0'
     testCompile 'io.rest-assured:rest-assured:3.0.7'
 
+    if (gradle.ext.ttorrentFromSource) {
     // sl4j-simple is required by ttorrent's logger. Without it, logging is missing for ttorrent
     // and the following error is printed:
     // 'SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".'
-//    testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
+        testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
+    }
 
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
 }
