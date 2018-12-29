@@ -7,6 +7,7 @@ var app = require('electron').remote;
 var dialog = app.dialog;
 
 var selectDownloadDestinationElement = document.getElementById('select-destination');
+var selectionErrorElement = document.getElementById("selection-error");
 var destinationElement = document.getElementById("destination");
 var downloadElement = document.getElementById("download");
 
@@ -33,11 +34,19 @@ downloadElement.addEventListener('click', function () {
   var address = inputTargetAddress.value;
   
   var selectedFiles = [].slice
-        .call(filesListSelectable.selectedOptions)
-        .map(function(el){
-            return el.value
-            }
-		);
+    .call(filesListSelectable.selectedOptions)
+    .map(function(el){
+        return el.value
+        }
+    );
+
+  if (0 == selectedFiles.length) {
+    selectionErrorElement.innerHTML = "Please select files to download.";
+    selectionErrorElement.hidden = false;
+//    window.alert("Selected files: " + selectedFiles);
+    return;
+  }
+
   console.log('Download path "' + selectedFiles + '" from ' + address);
   ipcRenderer.send('fetch-download-info', address, selectedFiles);
 });

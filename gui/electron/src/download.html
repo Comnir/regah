@@ -6,22 +6,25 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-Manage local sharing - add/remove shared files/folders.
+Download files from a remote machine.
 <p>
-    The address of the target machine:
+    Target machine IP address:
     <input id='input-target-address' type="text" value="localhost"/>
 </p>
 
-<br>
 
-<div id="fetch-list" class="button">List shared resources from the specified address</div>
+<div id="fetch-list" class="button">List shared resources</div>
+<br>
+<div id="selection-error" class="error-panel" hidden></div>
 <select multiple id="shared-list-selectable">
 
 </select>
+<br>
 
-<div id="download" class="button">Download selected</div>
 <div id="select-destination" class="button">Select download destination</div>
 <div id="destination"></div>
+<br>
+<div id="download" class="button">Download selected</div>
 
 <!-- Load javascript after all of the page elements are available 
 <script src="list.js"></script> -->
