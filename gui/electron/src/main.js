@@ -1,8 +1,11 @@
 "use strict";
 const {app, BrowserWindow} = require('electron');
+const WebSocket = require("ws")
 const {net} = require('electron');
 const MANAGE_PORT = 42421;
 const CLIENT_PORT = 42424;
+const stringCommon = require('./string.common.js');
+const truncate = stringCommon.truncate
 
 var ipcMain = require('electron').ipcMain;
 var http = require('http')
@@ -56,7 +59,7 @@ ipcMain.on('open-download-window', function () {
         downloadWindow = null;
     });
 });
-
+ 
 ipcMain.on('add-files', function (event, ip, newPath) {
     console.log("#add-files# Asked  to send 'add files' request with path " + newPath);
     const jsonBody = JSON.stringify({ "paths":[newPath]});
@@ -111,9 +114,9 @@ ipcMain.on('fetch-download-info', function (event, ip, paths) {
     var jsonBody = JSON.stringify({"filePath": paths[0]});
 
     sendRequest(options, (rawResponse) => {
-       console.log("#fetch-download-info# end of response, raw data: " + rawResponse);
+       console.log("#fetch-download-info# end of response, raw data (truncated): " + truncate(rawResponse, 100));
        const json = JSON.parse(rawResponse);
-       console.log('#fetch-download-info# No more data in response. After parse: ' + json);
+       console.log('#fetch-download-info# No more data in response.');
        event.sender.send('got-download-info', json);
     }, jsonBody);
 });
@@ -131,10 +134,10 @@ ipcMain.on('download', function (event, ip, destination, downloadData) {
 
     var jsonRequest = JSON.stringify({"path": destination, "downloadData": JSON.stringify(downloadData)});
     
-    console.log('#download# send download request with JSON: ' + jsonRequest);
+    console.log('#download# send download request with JSON: ' + truncate(jsonRequest, 100));
     
     sendRequest(options, (rawResponse) => {
-       console.log("#download# end of response, raw data: " + rawResponse);
+       console.log("#download# end of response, raw data: " + truncate(rawResponse, 100) );
        event.sender.send('download-started');
     }, jsonRequest);
 });
@@ -148,7 +151,6 @@ function sendRequest(requestOptions, onRequestEnd, requestBody) {
         response.setEncoding('utf8');
         let rawData = '';
         response.on('data', (chunk) => {
-          console.log('BODY: ' + chunk);
           rawData += chunk;
         });
 

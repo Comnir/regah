@@ -2,6 +2,7 @@ package com.jefferson.regah;
 
 import com.jefferson.regah.client.SharingManager;
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
+import com.jefferson.regah.notification.NotificationBus;
 import com.jefferson.regah.server.SharingServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,19 +17,22 @@ public class Application {
 
     private final ImmutableWrapper<SharingServer> sharingServerWrapper = new ImmutableWrapper<>();
     private final ImmutableWrapper<SharingManager> sharingClientWrapper = new ImmutableWrapper<>();
+    private final ImmutableWrapper<NotificationBus> notificationServerWrapper = new ImmutableWrapper<>();
 
     private final SharedResources sharedResources;
     private final File parentFolderForTorrent;
+    private final int notificationServerPort;
 
     private Application(final File applicationDataFolder) {
-        this(42424, new SharedResources(), applicationDataFolder);
+        this(42424, 42100, new SharedResources(), applicationDataFolder);
     }
 
-    Application(final int sharingServerPort, final SharedResources sharedResources, File applicationDataFolder) {
+    Application(final int sharingServerPort, int notificationServerPort, final SharedResources sharedResources, File applicationDataFolder) {
         this.sharingServerPort = sharingServerPort;
         this.sharedResources = sharedResources;
 
         parentFolderForTorrent = applicationDataFolder;
+        this.notificationServerPort = notificationServerPort;
     }
 
     public static void main(String[] args) {
@@ -49,31 +53,29 @@ public class Application {
     }
 
     void start() {
-        boolean anySuccess = false;
         try {
             sharingServerWrapper.set(new SharingServer(sharedResources, sharingServerPort, parentFolderForTorrent)).start();
-            anySuccess = true;
         } catch (IOException e) {
-            log.error("Sharing server failed to start!", e);
+            logAndExit(e, "Sharing server failed to start!");
         }
 
         try {
             sharingClientWrapper.set(new SharingManager(sharedResources)).start();
-            anySuccess = true;
         } catch (IOException e) {
-            log.error("Sharing client failed to start!", e);
+            logAndExit(e, "Sharing client failed to start!");
         }
 
-        if (!anySuccess) {
-            log.fatal("Failed to start any service during startup of the application."
-                    + System.lineSeparator()
-                    + "The application will exit.");
-            System.exit(-1);
-        }
+        NotificationBus.startOnPort(notificationServerPort);
+    }
+
+    private void logAndExit(IOException e, String s) {
+        log.error(s, e);
+        System.exit(-1);
     }
 
     void stop() {
         sharingClientWrapper.asOptional().ifPresent(SharingManager::stop);
         sharingServerWrapper.asOptional().ifPresent(SharingServer::stop);
+        notificationServerWrapper.asOptional().ifPresent(NotificationBus::stop);
     }
 }

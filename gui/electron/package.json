@@ -4,6 +4,7 @@
   "description": "Regah GUI for desktop.",
   "main": "src/main.js",
   "scripts": {
+    "start-debug": "electron --debug --inspect=5858 .",
     "start": "electron .",
     "test": "test"
   },
@@ -19,5 +20,8 @@
   "homepage": "https://github.com/Comnir/regah#readme",
   "devDependencies": {
     "electron": "^2.0.8"
+  },
+  "dependencies": {
+    "ws": "^6.1.2"
   }
 }

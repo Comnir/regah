@@ -15,3 +15,9 @@ task startGui (type: NpmTask) {
     inputs.dir('src')
     dependsOn npmInstall
 }
+
+task startGuiDebug (type: NpmTask) {
+    args = ['run', 'start-debug']
+    inputs.dir('src')
+    dependsOn npmInstall
+}

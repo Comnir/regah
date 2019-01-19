@@ -8,8 +8,9 @@ import com.jefferson.regah.transport.UnsupportedTransportType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -32,30 +33,35 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 class SharingServerTest {
     private static final int SERVER_PORT = 42424;
     private static final int MANAGEMENT_PORT = 42421; // TODO: make this port configurable in Application
+    private static final int NOTIFICATIONS_PORT = 4200;
     private static final Gson GSON = new Gson();
-    private Application application;
 
-    private SharedResources sharedResources;
+    private static Application application;
+    private static SharedResources sharedResources;
+    private static Path temporaryFolder;
 
-    private Path temporaryFolder;
-
-    @BeforeEach
-    void startApplication() throws IOException {
+    @BeforeAll
+    static void startApplication() throws IOException {
         temporaryFolder = Files.createTempDirectory("regah-test");
         sharedResources = new SharedResources();
-        application = new Application(SERVER_PORT, sharedResources, temporaryFolder.toFile());
+        application = new Application(SERVER_PORT, NOTIFICATIONS_PORT, sharedResources, temporaryFolder.toFile());
         application.start();
     }
-
     @AfterEach
-    void stopApplication() throws IOException {
-        application.stop();
+    void cleanup() throws IOException {
+        sharedResources.unshareAll();
         try (final Stream<Path> folderTree = Files.walk(temporaryFolder)) {
             folderTree.sorted(Comparator.reverseOrder())
+                    .filter(p -> !p.equals(temporaryFolder))
                     .map(Path::toFile)
                     .map(File::delete)
                     .forEach(f -> System.out.println(String.format("Not deleted: %s", f)));
         }
+    }
+
+    @AfterAll
+    static void stopApplication() {
+        application.stop();
     }
 
     @Test

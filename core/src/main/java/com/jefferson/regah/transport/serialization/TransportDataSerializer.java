@@ -27,7 +27,9 @@ public class TransportDataSerializer implements TransportDataVisitor {
     public void visit(TorrentTransportData data) {
         final Map map = Map.of(
                 TRANSPORT_TYPE_KEY, TRANSPORT_TYPE_TORRENT_KEY,
-                TRANSPORT_DATA_KEY, data.asJson());
+                TRANSPORT_DATA_KEY, data.asJson(),
+                TRANSPORT_ID_KEY, data.getId()
+        );
         json.set(gson.toJson(map));
     }
 

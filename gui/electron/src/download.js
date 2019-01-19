@@ -1,5 +1,6 @@
 "use strict";
 var ipcRenderer = require('electron').ipcRenderer;
+const truncate = require('./string.common.js').truncate
 var listJs = require('./list.js');
 var filesListSelectable = listJs.filesListSelectable;
 var inputTargetAddress = listJs.inputTargetAddress
@@ -10,6 +11,31 @@ var selectDownloadDestinationElement = document.getElementById('select-destinati
 var selectionErrorElement = document.getElementById("selection-error");
 var destinationElement = document.getElementById("destination");
 var downloadElement = document.getElementById("download");
+
+
+function registerForServerNotifications(sender) {
+    if (registered[sender]) {
+        console.log("Already registered");
+        return;
+    }
+
+    console.log("Sender " + sender + " will be registered");
+
+    var progressNotifications = new WebSocket("ws://127.0.0.1:42100/subscribe/" + sender);
+    var listener = function (message) {
+        console.log("Got some message:" + message);
+        progressUpdate(message);
+    };
+    progressNotifications.onopen = function () {
+        console.log("Opened connection for " + sender);
+        document.getElementById("progress-section").style.visibility = "visible";
+    }
+
+    progressNotifications.onmessage = listener
+//    progressNotifications.on('message', listener);
+}
+
+var registered = {};
 
 selectDownloadDestinationElement.addEventListener('click', function () {
     var dialogOptions = {
@@ -56,17 +82,27 @@ ipcRenderer.on('got-download-info',
 		var destination = destinationElement.innerHTML
 		var address = inputTargetAddress.value;
 		// TODO: handle failed request
-		console.log("Got download info: " + info);
 		console.log("Download destination is: " + destination);
+
+
+        const transportId = info["TRANSPORT_ID"]
+        console.log("Register for notification for ID: " + transportId)
+        registerForServerNotifications(transportId);
+
 		ipcRenderer.send('download', address, destination, info)
 	}
 );
 
-ipcRenderer.on('got-download-info', 
+ipcRenderer.on('download-started', 
 	function (sender) {
 		console.log("Download started.");
 	}
 );
+
+function progressUpdate(message){
+	console.log("Got a progress update: " + message.data);
+	document.getElementById("progress-updates").innerHTML = message.data;
+}
 
 function showDownloadButton() {
   downloadElement.style.visibility = "visible";

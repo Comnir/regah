@@ -1,6 +1,7 @@
 package com.jefferson.regah.transport.torrent;
 
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
+import com.jefferson.regah.notification.NotificationSender;
 import com.jefferson.regah.transport.*;
 import com.jefferson.regah.util.NetworkUtil;
 import com.turn.ttorrent.client.Client;
@@ -18,7 +19,9 @@ import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -29,15 +32,20 @@ public class TorrentTransporter implements Transporter {
 
     private final Map<String, Client> seeders;
     private final InetAddress localAddress;
+    private final NotificationSender notificationSender;
 
     public TorrentTransporter() {
-        this(NetworkUtil.addressForBinding());
+        this(NotificationSender.NULL_SENDER);
     }
 
-    public TorrentTransporter(InetAddress localAddress) {
+    public TorrentTransporter(NotificationSender notificationSender) {
+        this(NetworkUtil.addressForBinding(), notificationSender);
+    }
+
+    public TorrentTransporter(InetAddress localAddress, NotificationSender notificationSender) {
         seeders = new ConcurrentHashMap<>(5);
         this.localAddress = localAddress;
-
+        this.notificationSender = notificationSender;
     }
 
 
@@ -140,6 +148,7 @@ public class TorrentTransporter implements Transporter {
             Client.ClientState state = (Client.ClientState) rawState;
             float progress = client1.getTorrent().getCompletion();
             log.debug("Downloader# State:" + state + " Progress update: " + progress);
+            notificationSender.sendMessage("Completion: " + progress);
         });
 
         log.info("downloader# starts download");

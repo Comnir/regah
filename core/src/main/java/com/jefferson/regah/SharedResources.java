@@ -62,4 +62,8 @@ public class SharedResources {
         log.trace("Queried file's ancestor is shared: {}. File path: {}", ancestorShared, file);
         return ancestorShared;
     }
+
+    public void unshareAll() {
+        resources.clear();
+    }
 }
