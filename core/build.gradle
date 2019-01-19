@@ -1,3 +1,5 @@
+import java.nio.file.Paths
+
 buildscript {
     repositories {
         mavenCentral()
@@ -50,7 +52,7 @@ dependencies {
     compile 'com.jefferson.revised.turn:ttorrent-core:1.6-4'
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
-    testCompile 'org.mockito:mockito-core:2.11.0'
+    testCompile 'org.mockito:mockito-core:2.23.0'
     testCompile 'io.rest-assured:rest-assured:3.0.7'
 
     if (gradle.ext.ttorrentFromSource) {
@@ -67,3 +69,11 @@ task copyLibs(type: Copy)  {
     from configurations.compile
     into('libs')
 }
+
+task copyPreCommitHook(type: Copy) {
+    from Paths.get(rootDir as String, "hooks", "pre-commit")
+    into Paths.get(rootDir as String, ".git", "hooks")
+    fileMode 0777
+}
+
+build.dependsOn copyPreCommitHook

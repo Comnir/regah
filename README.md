@@ -30,7 +30,10 @@ An Electron based GUI can be started with:
 
 ### Git hooks (Linux/Mac)
 
-A git pre-commit hook can be 'installed' by executing
-  ln -s ../../hooks/pre-commit.sh pre-commit
+A git pre-commit hook is installed when executing 'build' with Gradle.
 
-From .git/hooks folder.
+ It can also be 'installed' by executing 'copyPreCommitHook' Gradle task
+ or by running
+  ln -s ../../hooks/pre-commit pre-commit
+
+from .git/hooks folder.

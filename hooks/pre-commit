@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# stash any unstaged changes - we want to verify commited state
+# stash any unstaged changes - we want to verify committed state
 git stash -q --keep-index
 
 echo "Running tests with Gradle from folder " + `pwd`
