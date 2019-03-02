@@ -41,8 +41,8 @@ from .git/hooks folder.
 ## To-Do / Wish list
 ### Basics
 1. Write logs to file
-  1. Java side
-  1. Electron side
+   1. Java side
+   1. Electron side
 1. Use configuration files: ports, data folder, etc.
 1. Persist data: shared files, progress, etc.
 
