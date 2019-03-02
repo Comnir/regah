@@ -1,4 +1,6 @@
 "use strict";
+
+const log = require('electron-log');
 var ipcRenderer = require('electron').ipcRenderer;
 
 var app = require('electron').remote;
@@ -17,7 +19,7 @@ selectToAddElement.addEventListener('click', function () {
        if (undefined === path) {
          // nothing selected - leave old state as-is
        } else {
-        console.log("selected a file: " + path);
+        log.info("selected a file: " + path);
         selectedFilesElement.innerHTML = path;
         showAddButton();
        }
@@ -26,12 +28,12 @@ selectToAddElement.addEventListener('click', function () {
 });
 
 addFilesElement.addEventListener('click', function () {
-  console.log("Add file:" + selectedFilesElement.innerHTML);
+  log.info("Add file:" + selectedFilesElement.innerHTML);
   ipcRenderer.send('add-files', inputTargetAddress.value, selectedFilesElement.innerHTML);
 });
 
 ipcRenderer.on('add-succeeded', function (sender, json) {
-  console.log("Successfully added files");
+  log.info("Successfully added files");
   selectedFilesElement.innerHTML = ""
   hideAddButton();
   fetchList(); // refresh list of shared resources

@@ -5,7 +5,8 @@ const {net} = require('electron');
 const MANAGE_PORT = 42421;
 const CLIENT_PORT = 42424;
 const stringCommon = require('./string.common.js');
-const truncate = stringCommon.truncate
+const truncate = stringCommon.truncate;
+const log = require('electron-log');
 
 var ipcMain = require('electron').ipcMain;
 var http = require('http')
@@ -61,7 +62,7 @@ ipcMain.on('open-download-window', function () {
 });
  
 ipcMain.on('add-files', function (event, ip, newPath) {
-    console.log("#add-files# Asked  to send 'add files' request with path " + newPath);
+    log.info("#add-files# Asked  to send 'add files' request with path " + newPath);
     const jsonBody = JSON.stringify({ "paths":[newPath]});
 
     const options = {
@@ -75,13 +76,13 @@ ipcMain.on('add-files', function (event, ip, newPath) {
     };
 
     sendRequest(options, (rawData) => {
-       console.log("#add-files# end of response, raw response: " + rawData);
+       log.info("#add-files# end of response, raw response: " + rawData);
        event.sender.send('add-succeeded');
     }, jsonBody)
 });
 
 ipcMain.on('fetch-list', function (event, ip) {
-	console.log('will send request to fetch list');
+	log.info('will send request to fetch list');
     const options = {
       hostname: ip,
       port: CLIENT_PORT,
@@ -93,9 +94,9 @@ ipcMain.on('fetch-list', function (event, ip) {
     };
 
     sendRequest(options, (rawResponse) => {
-       console.log("#fetch-list# end of response, raw data: " + rawResponse);
+       log.debug("#fetch-list# end of response, raw data: " + rawResponse);
        const json = JSON.parse(rawResponse);
-       console.log('#fetch-list# No more data in response. After parse: ' + json);
+       log.debug('#fetch-list# No more data in response. After parse: ' + json);
        event.sender.send('got-resources-list', json);
     });
 });
@@ -114,9 +115,9 @@ ipcMain.on('fetch-download-info', function (event, ip, paths) {
     var jsonBody = JSON.stringify({"filePath": paths[0]});
 
     sendRequest(options, (rawResponse) => {
-       console.log("#fetch-download-info# end of response, raw data (truncated): " + truncate(rawResponse, 100));
+       log.info("#fetch-download-info# end of response, raw data (truncated): " + truncate(rawResponse, 100));
        const json = JSON.parse(rawResponse);
-       console.log('#fetch-download-info# No more data in response.');
+       log.info('#fetch-download-info# No more data in response.');
        event.sender.send('got-download-info', json);
     }, jsonBody);
 });
@@ -134,10 +135,10 @@ ipcMain.on('download', function (event, ip, destination, downloadData) {
 
     var jsonRequest = JSON.stringify({"path": destination, "downloadData": JSON.stringify(downloadData)});
     
-    console.log('#download# send download request with JSON: ' + truncate(jsonRequest, 100));
+    log.info('#download# send download request with JSON: ' + truncate(jsonRequest, 100));
     
     sendRequest(options, (rawResponse) => {
-       console.log("#download# end of response, raw data: " + truncate(rawResponse, 100) );
+       log.info("#download# end of response, raw data: " + truncate(rawResponse, 100) );
        event.sender.send('download-started');
     }, jsonRequest);
 });
@@ -145,8 +146,8 @@ ipcMain.on('download', function (event, ip, destination, downloadData) {
 function sendRequest(requestOptions, onRequestEnd, requestBody) {
     const request = net.request(requestOptions);
     request.on('response', (response) => {
-        console.log('STATUS: ' + response.statusCode);
-        console.log('HEADERS: ' + JSON.stringify(response.headers));
+        log.debug('STATUS: ' + response.statusCode);
+        log.debug('HEADERS: ' + JSON.stringify(response.headers));
 
         response.setEncoding('utf8');
         let rawData = '';
