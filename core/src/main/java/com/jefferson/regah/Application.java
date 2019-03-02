@@ -4,6 +4,8 @@ import com.jefferson.regah.client.SharingManager;
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
 import com.jefferson.regah.notification.NotificationBus;
 import com.jefferson.regah.server.SharingServer;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,22 +24,26 @@ public class Application {
     private final SharedResources sharedResources;
     private final File parentFolderForTorrent;
     private final int notificationServerPort;
+    private final Config config;
 
-    private Application(final File applicationDataFolder) {
-        this(42424, 42100, new SharedResources(), applicationDataFolder);
+    private Application(final Config config, final File applicationDataFolder) {
+        this(config.getInt("sharing-server-port"), config.getInt("notification-server-port"), new SharedResources(), applicationDataFolder, config);
     }
 
-    Application(final int sharingServerPort, int notificationServerPort, final SharedResources sharedResources, File applicationDataFolder) {
+    Application(final int sharingServerPort, int notificationServerPort, final SharedResources sharedResources, File applicationDataFolder, final Config config) {
         this.sharingServerPort = sharingServerPort;
         this.sharedResources = sharedResources;
 
         parentFolderForTorrent = applicationDataFolder;
         this.notificationServerPort = notificationServerPort;
+        this.config = config;
     }
 
     public static void main(String[] args) {
+        final Config config = ConfigFactory.load("regah-static");
+
         final File dataFolder = getDataFolder();
-        final Application application = new Application(dataFolder);
+        final Application application = new Application(config, dataFolder);
         Runtime.getRuntime().addShutdownHook(new Thread(application::stop));
         application.start();
     }
