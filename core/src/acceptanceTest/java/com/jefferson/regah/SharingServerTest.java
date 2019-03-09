@@ -5,7 +5,6 @@ import com.jefferson.regah.client.handler.DownloadHandler;
 import com.jefferson.regah.server.handler.HttpConstants;
 import com.jefferson.regah.transport.InvalidTransportData;
 import com.jefferson.regah.transport.UnsupportedTransportType;
-import com.typesafe.config.ConfigFactory;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
@@ -45,8 +44,8 @@ class SharingServerTest {
     static void startApplication() throws IOException {
         temporaryFolder = Files.createTempDirectory("regah-test");
         sharedResources = new SharedResources();
-        application = new Application(SERVER_PORT, NOTIFICATIONS_PORT, sharedResources,
-                temporaryFolder.toFile(), ConfigFactory.load("regah-test"));
+        application = new Application(SERVER_PORT, MANAGEMENT_PORT, NOTIFICATIONS_PORT, sharedResources,
+                temporaryFolder.toFile());
         application.start();
     }
     @AfterEach

@@ -1,14 +1,17 @@
 package com.jefferson.regah;
 
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.jefferson.regah.client.SharingManager;
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
+import com.jefferson.regah.guice.ApplicationModule;
 import com.jefferson.regah.notification.NotificationBus;
 import com.jefferson.regah.server.SharingServer;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -16,6 +19,7 @@ import java.nio.file.Paths;
 public class Application {
     private static final Logger log = LogManager.getLogger(Application.class);
     private final int sharingServerPort;
+    private final int sharingClientPort;
 
     private final ImmutableWrapper<SharingServer> sharingServerWrapper = new ImmutableWrapper<>();
     private final ImmutableWrapper<SharingManager> sharingClientWrapper = new ImmutableWrapper<>();
@@ -24,26 +28,34 @@ public class Application {
     private final SharedResources sharedResources;
     private final File parentFolderForTorrent;
     private final int notificationServerPort;
-    private final Config config;
 
-    private Application(final Config config, final File applicationDataFolder) {
-        this(config.getInt("sharing-server-port"), config.getInt("notification-server-port"), new SharedResources(), applicationDataFolder, config);
+    @Inject
+    Application(@Named("sharing-server-port") final String sharingServerPort,
+                @Named("sharing-client-port") final String sharingClientPort,
+                @Named("notification-server-port") final String notificationServerPort,
+                final SharedResources sharedResources,
+                @Named("application-data-folder") final String applicationDataFolder) {
+        this(Integer.parseInt(sharingServerPort), Integer.parseInt(sharingClientPort), Integer.parseInt(notificationServerPort), sharedResources, new File(applicationDataFolder));
     }
 
-    Application(final int sharingServerPort, int notificationServerPort, final SharedResources sharedResources, File applicationDataFolder, final Config config) {
+    Application(final int sharingServerPort,
+                final int sharingClientPort,
+                final int notificationServerPort,
+                final SharedResources sharedResources,
+                final File applicationDataFolder) {
         this.sharingServerPort = sharingServerPort;
+        this.sharingClientPort = sharingClientPort;
         this.sharedResources = sharedResources;
-
         parentFolderForTorrent = applicationDataFolder;
         this.notificationServerPort = notificationServerPort;
-        this.config = config;
     }
 
     public static void main(String[] args) {
-        final Config config = ConfigFactory.load("regah-static");
+        final Injector injector = Guice.createInjector(new ApplicationModule());
+        final Application application = injector.getInstance(Application.class);
 
         final File dataFolder = getDataFolder();
-        final Application application = new Application(config, dataFolder);
+//        final Application application = new Application(config, dataFolder);
         Runtime.getRuntime().addShutdownHook(new Thread(application::stop));
         application.start();
     }
