@@ -17,11 +17,11 @@ public class ErrorWrappingHandler<T> implements HttpHandler {
     private final Handler<T> resultingHandler;
     private final Responder responder;
 
-    public ErrorWrappingHandler(Handler resultingHandler) {
+    public ErrorWrappingHandler(Handler<T> resultingHandler) {
         this(resultingHandler, new Responder());
     }
 
-    public ErrorWrappingHandler(final Handler resultingHandler, final Responder responder) {
+    public ErrorWrappingHandler(final Handler<T> resultingHandler, final Responder responder) {
         this.resultingHandler = Objects.requireNonNull(resultingHandler);
         this.responder = responder;
     }

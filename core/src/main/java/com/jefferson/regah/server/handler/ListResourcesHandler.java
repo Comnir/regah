@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Optional;
 
-public class ListResourcesHandler implements Handler {
+public class ListResourcesHandler implements Handler<Object> {
     private static final Logger log = LogManager.getLogger(ListResourcesHandler.class);
     private static final Gson gson = new Gson();
 
@@ -27,7 +27,6 @@ public class ListResourcesHandler implements Handler {
 
     @Override
     public String act(Object parameters) {
-        final String response = gson.toJson(Map.of("results", sharedResources.getResources()));
-        return response;
+        return gson.toJson(Map.of("results", sharedResources.getResources()));
     }
 }
