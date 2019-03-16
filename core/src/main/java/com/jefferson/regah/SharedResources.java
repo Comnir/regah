@@ -3,6 +3,7 @@ package com.jefferson.regah;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Singleton
 public class SharedResources {
     private static final Logger log = LogManager.getLogger(SharedResources.class);
     final private Set<File> resources = new HashSet<>();

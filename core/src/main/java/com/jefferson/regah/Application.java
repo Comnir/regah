@@ -6,6 +6,7 @@ import com.google.inject.Injector;
 import com.jefferson.regah.client.SharingManager;
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
 import com.jefferson.regah.guice.ApplicationModule;
+import com.jefferson.regah.guice.HttpHandlersModule;
 import com.jefferson.regah.notification.NotificationBus;
 import com.jefferson.regah.server.SharingServer;
 import org.apache.logging.log4j.LogManager;
@@ -15,47 +16,36 @@ import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 public class Application {
     private static final Logger log = LogManager.getLogger(Application.class);
-    private final int sharingServerPort;
-    private final int sharingClientPort;
+    private final SharingServer sharingServer;
+    private final SharingManager sharingManager;
 
     private final ImmutableWrapper<SharingServer> sharingServerWrapper = new ImmutableWrapper<>();
     private final ImmutableWrapper<SharingManager> sharingClientWrapper = new ImmutableWrapper<>();
     private final ImmutableWrapper<NotificationBus> notificationServerWrapper = new ImmutableWrapper<>();
 
-    private final SharedResources sharedResources;
     private final File parentFolderForTorrent;
     private final int notificationServerPort;
 
     @Inject
-    Application(@Named("sharing-server-port") final String sharingServerPort,
-                @Named("sharing-client-port") final String sharingClientPort,
-                @Named("notification-server-port") final String notificationServerPort,
+    Application(final SharingServer sharingServer,
+                final SharingManager sharingManager,
+                @Named("notification-server-port") final int notificationServerPort,
                 final SharedResources sharedResources,
                 @Named("application-data-folder") final String applicationDataFolder) {
-        this(Integer.parseInt(sharingServerPort), Integer.parseInt(sharingClientPort), Integer.parseInt(notificationServerPort), sharedResources, new File(applicationDataFolder));
-    }
-
-    Application(final int sharingServerPort,
-                final int sharingClientPort,
-                final int notificationServerPort,
-                final SharedResources sharedResources,
-                final File applicationDataFolder) {
-        this.sharingServerPort = sharingServerPort;
-        this.sharingClientPort = sharingClientPort;
-        this.sharedResources = sharedResources;
-        parentFolderForTorrent = applicationDataFolder;
+        this.sharingServer = sharingServer;
+        this.sharingManager = sharingManager;
+        parentFolderForTorrent = new File(applicationDataFolder);
         this.notificationServerPort = notificationServerPort;
     }
 
     public static void main(String[] args) {
-        final Injector injector = Guice.createInjector(new ApplicationModule());
+        final Injector injector = Guice.createInjector(Arrays.asList(new ApplicationModule(), new HttpHandlersModule()));
         final Application application = injector.getInstance(Application.class);
 
-        final File dataFolder = getDataFolder();
-//        final Application application = new Application(config, dataFolder);
         Runtime.getRuntime().addShutdownHook(new Thread(application::stop));
         application.start();
     }
@@ -71,18 +61,8 @@ public class Application {
     }
 
     void start() {
-        try {
-            sharingServerWrapper.set(new SharingServer(sharedResources, sharingServerPort, parentFolderForTorrent)).start();
-        } catch (IOException e) {
-            logAndExit(e, "Sharing server failed to start!");
-        }
-
-        try {
-            sharingClientWrapper.set(new SharingManager(sharedResources)).start();
-        } catch (IOException e) {
-            logAndExit(e, "Sharing client failed to start!");
-        }
-
+        sharingServerWrapper.set(sharingServer).start();
+        sharingClientWrapper.set(sharingManager).start();
         NotificationBus.startOnPort(notificationServerPort);
     }
 
