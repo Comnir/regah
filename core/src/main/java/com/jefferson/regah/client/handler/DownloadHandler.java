@@ -2,8 +2,7 @@ package com.jefferson.regah.client.handler;
 
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.handler.Handler;
-import com.jefferson.regah.transport.TransportData;
-import com.jefferson.regah.transport.serialization.TransportDataDeserializer;
+import com.jefferson.regah.transport.Downloader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,21 +11,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 public class DownloadHandler implements Handler<Map<String, String>> {
     private static final Logger log = LogManager.getLogger(DownloadHandler.class);
 
     public static final String KEY_PATH = "path";
     public static final String KEY_DATA = "downloadData";
-    private final Function<String, TransportDataDeserializer> deserializerFactory;
+    private final Downloader downloader;
 
-    public DownloadHandler() {
-        this(TransportDataDeserializer::new);
-    }
-
-    public DownloadHandler(final Function<String, TransportDataDeserializer> deserializerFactory) {
-        this.deserializerFactory = deserializerFactory;
+    public DownloadHandler(Downloader downloader) {
+        this.downloader = downloader;
     }
 
     @Override
@@ -34,9 +28,9 @@ public class DownloadHandler implements Handler<Map<String, String>> {
         final Path destination = getPath(parameters);
         final String downloadData = getTransportDataString(parameters);
 
-        final TransportDataDeserializer deserializer = createTransportDataDeserializer(downloadData);
-        final TransportData transportData = deserializer.getTransportData();
-        deserializer.getTransporter().downloadWithData(transportData, destination);
+        if (null != downloader) {
+            downloader.download(downloadData, destination);
+        }
 
         return "";
     }
@@ -58,10 +52,6 @@ public class DownloadHandler implements Handler<Map<String, String>> {
         }
 
         return path;
-    }
-
-    private TransportDataDeserializer createTransportDataDeserializer(String downloadData) {
-        return deserializerFactory.apply(downloadData);
     }
 
     @Override

@@ -2,13 +2,16 @@ package com.jefferson.regah.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.client.handler.AddHandler;
 import com.jefferson.regah.client.handler.DownloadHandler;
 import com.jefferson.regah.handler.ErrorWrappingHandler;
 import com.jefferson.regah.server.handler.ListResourcesHandler;
 import com.jefferson.regah.server.handler.PrepareResourceForDownloadHandler;
+import com.jefferson.regah.transport.Downloader;
 import com.jefferson.regah.transport.Transporter;
+import com.jefferson.regah.transport.serialization.TransportDataDeserializerFactory;
 import com.jefferson.regah.transport.torrent.TorrentTransporter;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -18,6 +21,7 @@ public class HttpHandlersModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(Transporter.class).to(TorrentTransporter.class);
+        install(new FactoryModuleBuilder().build(TransportDataDeserializerFactory.class));
     }
 
     @Provides
@@ -34,13 +38,13 @@ public class HttpHandlersModule extends AbstractModule {
 
     @Provides
     @Named("addHandler")
-    HttpHandler addHandler(final SharedResources sharedResources, final Transporter transporter) {
+    HttpHandler addHandler(final SharedResources sharedResources) {
         return new ErrorWrappingHandler<>(new AddHandler(sharedResources));
     }
 
     @Provides
     @Named("downloadHandler")
-    HttpHandler downloadHandler(final SharedResources sharedResources) {
-        return new ErrorWrappingHandler<>(new DownloadHandler());
+    HttpHandler downloadHandler(final Downloader downloader) {
+        return new ErrorWrappingHandler<>(new DownloadHandler(downloader));
     }
 }
