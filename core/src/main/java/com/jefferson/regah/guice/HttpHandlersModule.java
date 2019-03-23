@@ -9,7 +9,6 @@ import com.jefferson.regah.client.handler.DownloadHandler;
 import com.jefferson.regah.handler.ErrorWrappingHandler;
 import com.jefferson.regah.server.handler.ListResourcesHandler;
 import com.jefferson.regah.server.handler.PrepareResourceForDownloadHandler;
-import com.jefferson.regah.transport.Downloader;
 import com.jefferson.regah.transport.Transporter;
 import com.jefferson.regah.transport.serialization.TransportDataDeserializerFactory;
 import com.jefferson.regah.transport.torrent.TorrentTransporter;
@@ -44,7 +43,7 @@ public class HttpHandlersModule extends AbstractModule {
 
     @Provides
     @Named("downloadHandler")
-    HttpHandler downloadHandler(final Downloader downloader) {
-        return new ErrorWrappingHandler<>(new DownloadHandler(downloader));
+    HttpHandler downloadHandler(TransportDataDeserializerFactory deserializerFactory) {
+        return new ErrorWrappingHandler<>(new DownloadHandler(deserializerFactory));
     }
 }

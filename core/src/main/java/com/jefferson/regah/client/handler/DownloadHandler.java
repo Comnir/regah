@@ -2,7 +2,9 @@ package com.jefferson.regah.client.handler;
 
 import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.handler.Handler;
-import com.jefferson.regah.transport.Downloader;
+import com.jefferson.regah.transport.TransportData;
+import com.jefferson.regah.transport.serialization.TransportDataDeserializer;
+import com.jefferson.regah.transport.serialization.TransportDataDeserializerFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,10 +19,10 @@ public class DownloadHandler implements Handler<Map<String, String>> {
 
     public static final String KEY_PATH = "path";
     public static final String KEY_DATA = "downloadData";
-    private final Downloader downloader;
+    private final TransportDataDeserializerFactory deserializerFactory;
 
-    public DownloadHandler(Downloader downloader) {
-        this.downloader = downloader;
+    public DownloadHandler(final TransportDataDeserializerFactory deserializerFactory) {
+        this.deserializerFactory = deserializerFactory;
     }
 
     @Override
@@ -28,9 +30,9 @@ public class DownloadHandler implements Handler<Map<String, String>> {
         final Path destination = getPath(parameters);
         final String downloadData = getTransportDataString(parameters);
 
-        if (null != downloader) {
-            downloader.download(downloadData, destination);
-        }
+        final TransportDataDeserializer deserializer = createTransportDataDeserializer(downloadData);
+        final TransportData transportData = deserializer.getTransportData();
+        deserializer.getTransporter().downloadWithData(transportData, destination);
 
         return "";
     }
@@ -52,6 +54,10 @@ public class DownloadHandler implements Handler<Map<String, String>> {
         }
 
         return path;
+    }
+
+    private TransportDataDeserializer createTransportDataDeserializer(String downloadData) {
+        return deserializerFactory.create(downloadData);
     }
 
     @Override
