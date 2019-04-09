@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class NotificationBus {
+public class NotificationBus implements NotificationSender {
     private static final Logger log = LogManager.getLogger(NotificationBus.class);
 
     private static final String SUBSCRIPTION_PREFIX = "/subscribe/";
@@ -37,7 +37,7 @@ public class NotificationBus {
         private static final ImmutableWrapper<NotificationBus> instance = new ImmutableWrapper<>();
     }
 
-    static NotificationBus getInstance() {
+    public static NotificationBus getInstance() {
         return InstanceHolder.instance.get();
     }
 
@@ -131,6 +131,7 @@ public class NotificationBus {
         }
     }
 
+    @Override
     public boolean sendMessageTo(String subscriptionId, String message) {
         final WebSocket subscriber = subscribers.get(subscriptionId);
         if (null != subscriber) {
