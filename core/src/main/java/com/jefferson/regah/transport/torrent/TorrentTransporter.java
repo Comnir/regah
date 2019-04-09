@@ -1,5 +1,6 @@
 package com.jefferson.regah.transport.torrent;
 
+import com.google.inject.Inject;
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
 import com.jefferson.regah.notification.NotificationSender;
 import com.jefferson.regah.transport.*;
@@ -38,6 +39,7 @@ public class TorrentTransporter implements Transporter {
         this(NotificationSender.NULL_OBJECT);
     }
 
+    @Inject
     public TorrentTransporter(NotificationSender notificationSender) {
         this(NetworkUtil.addressForBinding(), notificationSender);
     }

@@ -12,10 +12,6 @@ import com.jefferson.regah.server.SharingServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.inject.Named;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Arrays;
 
 public class Application {
@@ -27,19 +23,11 @@ public class Application {
     private final ImmutableWrapper<SharingManager> sharingClientWrapper = new ImmutableWrapper<>();
     private final ImmutableWrapper<NotificationBus> notificationServerWrapper = new ImmutableWrapper<>();
 
-    private final File parentFolderForTorrent;
-    private final int notificationServerPort;
-
     @Inject
     Application(final SharingServer sharingServer,
-                final SharingManager sharingManager,
-                @Named("notification-server-port") final int notificationServerPort,
-                final SharedResources sharedResources,
-                @Named("application-data-folder") final String applicationDataFolder) {
+                final SharingManager sharingManager) {
         this.sharingServer = sharingServer;
         this.sharingManager = sharingManager;
-        parentFolderForTorrent = new File(applicationDataFolder);
-        this.notificationServerPort = notificationServerPort;
     }
 
     public static void main(String[] args) {
@@ -50,25 +38,9 @@ public class Application {
         application.start();
     }
 
-    private static File getDataFolder() {
-        final File dataFolder = Paths.get(System.getProperty("user.home"), "regah").toFile();
-        if (!dataFolder.exists() && !dataFolder.mkdir()) {
-            final String message = String.format("Data folder doesn't exist and could not be created. Path: %s", dataFolder);
-            log.fatal(message);
-            throw new IllegalStateException(message);
-        }
-        return dataFolder;
-    }
-
     void start() {
         sharingServerWrapper.set(sharingServer).start();
         sharingClientWrapper.set(sharingManager).start();
-        NotificationBus.startOnPort(notificationServerPort);
-    }
-
-    private void logAndExit(IOException e, String s) {
-        log.error(s, e);
-        System.exit(-1);
     }
 
     void stop() {

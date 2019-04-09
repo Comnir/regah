@@ -1,5 +1,7 @@
 package com.jefferson.regah.notification;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
 import com.jefferson.regah.http.WebSocketServer;
 import com.jefferson.regah.http.WebSocketServerBuilder;
@@ -8,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 
+import javax.inject.Named;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.time.Duration;
@@ -17,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+@Singleton
 public class NotificationBus implements NotificationSender {
     private static final Logger log = LogManager.getLogger(NotificationBus.class);
 
@@ -27,18 +31,9 @@ public class NotificationBus implements NotificationSender {
     private final CountDownLatch startedLatch;
     private final ImmutableWrapper<Exception> startFailureWrapper = new ImmutableWrapper<>();
 
-    public static void startOnPort(int notificationServerPort) {
-        InstanceHolder.instance.set(
-                new NotificationBus(new InetSocketAddress(InetAddress.getLoopbackAddress(), notificationServerPort)))
-                .start();
-    }
-
-    private static class InstanceHolder {
-        private static final ImmutableWrapper<NotificationBus> instance = new ImmutableWrapper<>();
-    }
-
-    public static NotificationBus getInstance() {
-        return InstanceHolder.instance.get();
+    @Inject
+    NotificationBus(@Named("loopback-address") InetAddress address, @Named("notification-server-port") int port) {
+        this(new InetSocketAddress(InetAddress.getLoopbackAddress(), port));
     }
 
     NotificationBus(InetSocketAddress address) {

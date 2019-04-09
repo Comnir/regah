@@ -3,10 +3,13 @@ package com.jefferson.regah.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.name.Names;
 import com.jefferson.regah.SharedResources;
 import com.jefferson.regah.client.handler.AddHandler;
 import com.jefferson.regah.client.handler.DownloadHandler;
 import com.jefferson.regah.handler.ErrorWrappingHandler;
+import com.jefferson.regah.notification.NotificationBus;
+import com.jefferson.regah.notification.NotificationSender;
 import com.jefferson.regah.server.handler.ListResourcesHandler;
 import com.jefferson.regah.server.handler.PrepareResourceForDownloadHandler;
 import com.jefferson.regah.transport.Transporter;
@@ -15,11 +18,14 @@ import com.jefferson.regah.transport.torrent.TorrentTransporter;
 import com.sun.net.httpserver.HttpHandler;
 
 import javax.inject.Named;
+import java.net.InetAddress;
 
 public class HttpHandlersModule extends AbstractModule {
     @Override
     protected void configure() {
+        bind(InetAddress.class).annotatedWith(Names.named("loopback-address")).toInstance(InetAddress.getLoopbackAddress());
         bind(Transporter.class).to(TorrentTransporter.class);
+        bind(NotificationSender.class).to(NotificationBus.class);
         install(new FactoryModuleBuilder().build(TransportDataDeserializerFactory.class));
     }
 

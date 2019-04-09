@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 class SharingServerTest {
     private static final int SERVER_PORT = 42424;
-    private static final int MANAGEMENT_PORT = 42421; // TODO: make this port configurable in Application
+    private static final int MANAGEMENT_PORT = 42421;
     private static final int NOTIFICATIONS_PORT = 4200;
     private static final Gson GSON = new Gson();
 
