@@ -1,17 +1,19 @@
 package com.jefferson.regah;
 
 import com.google.gson.Gson;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.jefferson.regah.client.handler.DownloadHandler;
+import com.jefferson.regah.guice.ApplicationModule;
+import com.jefferson.regah.guice.HttpHandlersModule;
 import com.jefferson.regah.server.handler.HttpConstants;
 import com.jefferson.regah.transport.InvalidTransportData;
 import com.jefferson.regah.transport.UnsupportedTransportType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -32,21 +35,32 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 class SharingServerTest {
     private static final int SERVER_PORT = 42424;
-    private static final int MANAGEMENT_PORT = 42421; // TODO: make this port configurable in Application
+    private static final int MANAGEMENT_PORT = 42421;
     private static final int NOTIFICATIONS_PORT = 4200;
     private static final Gson GSON = new Gson();
 
     private static Application application;
-    private static SharedResources sharedResources;
+    @Inject
+    private SharedResources sharedResources;
     private static Path temporaryFolder;
+    private static Injector injector;
 
     @BeforeAll
     static void startApplication() throws IOException {
         temporaryFolder = Files.createTempDirectory("regah-test");
-        sharedResources = new SharedResources();
-        application = new Application(SERVER_PORT, NOTIFICATIONS_PORT, sharedResources, temporaryFolder.toFile());
+
+        injector = Guice.createInjector(Arrays.asList(new ApplicationModule(), new HttpHandlersModule()));
+        application = injector.getInstance(Application.class);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(application::stop));
         application.start();
     }
+
+    @BeforeEach
+    void setup() {
+        injector.injectMembers(this);
+    }
+
     @AfterEach
     void cleanup() throws IOException {
         sharedResources.unshareAll();

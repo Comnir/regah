@@ -4,6 +4,7 @@ import com.google.gson.reflect.TypeToken;
 import com.jefferson.regah.handler.Handler;
 import com.jefferson.regah.transport.TransportData;
 import com.jefferson.regah.transport.serialization.TransportDataDeserializer;
+import com.jefferson.regah.transport.serialization.TransportDataDeserializerFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,20 +13,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 public class DownloadHandler implements Handler<Map<String, String>> {
     private static final Logger log = LogManager.getLogger(DownloadHandler.class);
 
     public static final String KEY_PATH = "path";
     public static final String KEY_DATA = "downloadData";
-    private final Function<String, TransportDataDeserializer> deserializerFactory;
+    private final TransportDataDeserializerFactory deserializerFactory;
 
-    public DownloadHandler() {
-        this(TransportDataDeserializer::new);
-    }
-
-    public DownloadHandler(final Function<String, TransportDataDeserializer> deserializerFactory) {
+    public DownloadHandler(final TransportDataDeserializerFactory deserializerFactory) {
         this.deserializerFactory = deserializerFactory;
     }
 
@@ -61,7 +57,7 @@ public class DownloadHandler implements Handler<Map<String, String>> {
     }
 
     private TransportDataDeserializer createTransportDataDeserializer(String downloadData) {
-        return deserializerFactory.apply(downloadData);
+        return deserializerFactory.create(downloadData);
     }
 
     @Override

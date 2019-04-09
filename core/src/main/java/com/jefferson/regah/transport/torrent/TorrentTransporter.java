@@ -1,5 +1,6 @@
 package com.jefferson.regah.transport.torrent;
 
+import com.google.inject.Inject;
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
 import com.jefferson.regah.notification.NotificationSender;
 import com.jefferson.regah.transport.*;
@@ -35,17 +36,18 @@ public class TorrentTransporter implements Transporter {
     private final NotificationSender notificationSender;
 
     public TorrentTransporter() {
-        this(NotificationSender.NULL_SENDER);
+        this(NotificationSender.NULL_OBJECT);
     }
 
+    @Inject
     public TorrentTransporter(NotificationSender notificationSender) {
         this(NetworkUtil.addressForBinding(), notificationSender);
     }
 
     public TorrentTransporter(InetAddress localAddress, NotificationSender notificationSender) {
+        this.notificationSender = notificationSender;
         seeders = new ConcurrentHashMap<>(5);
         this.localAddress = localAddress;
-        this.notificationSender = notificationSender;
     }
 
 
@@ -128,12 +130,12 @@ public class TorrentTransporter implements Transporter {
         } catch (InvalidTransportData invalidTransportData) {
             throw new IllegalArgumentException("Got torrent trasport data, but it was malformed.", invalidTransportData);
         }
-        download(torrent, remotePeer, localAddress);
+        download(torrent, remotePeer, localAddress, data.getId());
 
         log.info("Completed downloading torrent " + data.getId());
     }
 
-    private void download(SharedTorrent torrent, Peer remotePeer, InetAddress address) {
+    private void download(SharedTorrent torrent, Peer remotePeer, InetAddress address, final String subscriptionId) {
         final Client client;
         try {
             client = new Client(address, torrent);
@@ -148,7 +150,7 @@ public class TorrentTransporter implements Transporter {
             Client.ClientState state = (Client.ClientState) rawState;
             float progress = client1.getTorrent().getCompletion();
             log.debug("Downloader# State:" + state + " Progress update: " + progress);
-            notificationSender.sendMessage("Completion: " + progress);
+            notificationSender.sendMessageTo(subscriptionId, "Completion: " + progress);
         });
 
         log.info("downloader# starts download");

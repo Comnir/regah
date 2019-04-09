@@ -1,16 +1,12 @@
 package com.jefferson.regah.server;
 
-import com.jefferson.regah.SharedResources;
-import com.jefferson.regah.handler.ErrorWrappingHandler;
 import com.jefferson.regah.http.Server;
-import com.jefferson.regah.server.handler.ListResourcesHandler;
-import com.jefferson.regah.server.handler.PrepareResourceForDownloadHandler;
-import com.jefferson.regah.transport.torrent.TorrentTransporter;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.util.Map;
 
@@ -20,21 +16,23 @@ import java.util.Map;
  */
 public class SharingServer {
     private static final Logger log = LogManager.getLogger(SharingServer.class);
-    private final SharedResources sharedResources;
     private final Server server;
-    private final File parentFolderForTorrent;
+    private final HttpHandler prepareResourceForDownloadHandler;
+    private final HttpHandler listResourcesHandler;
 
-    public SharingServer(SharedResources sharedResources, int serverPort, final File parentFolderForTorrent) throws IOException {
-        this.sharedResources = sharedResources;
-        server = new Server(serverPort, "Sharing center server");
-        this.parentFolderForTorrent = parentFolderForTorrent;
+    @Inject
+    public SharingServer(@Named("sharing-server-port") int serverPort,
+                         @Named("prepareResourceForDownload") HttpHandler prepareResourceForDownloadHandler,
+                         @Named("addResource") HttpHandler listResourcesHandler) throws IOException {
+        server = new Server(serverPort, "Sharing center server"); // TODO: inject
+        this.prepareResourceForDownloadHandler = prepareResourceForDownloadHandler;
+        this.listResourcesHandler = listResourcesHandler;
     }
 
     public void start() {
         final Map<String, HttpHandler> handlers = Map.of(
-                "/listShared", new ErrorWrappingHandler(new ListResourcesHandler(sharedResources)),
-                "/prepareResourceForDownload", new ErrorWrappingHandler(new PrepareResourceForDownloadHandler(sharedResources,
-                        new TorrentTransporter())));
+                "/listShared", listResourcesHandler,
+                "/prepareResourceForDownload", prepareResourceForDownloadHandler);
 
         server.start(handlers);
     }

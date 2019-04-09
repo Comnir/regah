@@ -1,29 +1,31 @@
 package com.jefferson.regah.client;
 
-import com.jefferson.regah.SharedResources;
-import com.jefferson.regah.client.handler.AddHandler;
-import com.jefferson.regah.client.handler.DownloadHandler;
-import com.jefferson.regah.handler.ErrorWrappingHandler;
+import com.google.inject.Inject;
 import com.jefferson.regah.http.Server;
 import com.sun.net.httpserver.HttpHandler;
 
+import javax.inject.Named;
 import java.io.IOException;
 import java.util.Map;
 
 public class SharingManager {
     private final int serverPort = 42421;
-    private final SharedResources sharedResources;
     private final Server server;
+    private final HttpHandler addHandler;
+    private final HttpHandler downloadHandler;
 
-    public SharingManager(SharedResources sharedResources) throws IOException {
-        this.sharedResources = sharedResources;
-        this.server = new Server(serverPort, "Sharing center management");
+    @Inject
+    public SharingManager(@Named("addHandler") final HttpHandler addHandler,
+                          @Named("downloadHandler") final HttpHandler downloadHandler) throws IOException {
+        this.addHandler = addHandler;
+        this.downloadHandler = downloadHandler;
+        this.server = new Server(serverPort, "Sharing center management"); // TODO: inject
     }
 
     public void start() {
         final Map<String, HttpHandler> handlers = Map.of(
-                "/add", new ErrorWrappingHandler(new AddHandler(sharedResources)),
-                "/download", new ErrorWrappingHandler(new DownloadHandler()));
+                "/add", addHandler,
+                "/download", downloadHandler);
 
         server.start(handlers);
     }

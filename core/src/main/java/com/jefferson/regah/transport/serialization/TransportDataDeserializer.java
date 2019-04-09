@@ -2,8 +2,10 @@ package com.jefferson.regah.transport.serialization;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.assistedinject.Assisted;
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
-import com.jefferson.regah.notification.NotificationSender;
 import com.jefferson.regah.transport.InvalidTransportData;
 import com.jefferson.regah.transport.TransportData;
 import com.jefferson.regah.transport.Transporter;
@@ -20,11 +22,19 @@ public class TransportDataDeserializer {
     private static final Gson gson = new Gson();
 
     private final String transportDataJson;
+    private final Provider<TorrentTransporter> torrentTransporterProvider;
     private final ImmutableWrapper<TransportData> transportDataWrapper;
     private final ImmutableWrapper<Transporter> transporterWrapper;
 
+
     public TransportDataDeserializer(final String transportDataJson) {
+        this(transportDataJson, TorrentTransporter::new);
+    }
+
+    @Inject
+    public TransportDataDeserializer(@Assisted final String transportDataJson, Provider<TorrentTransporter> torrentTransporterProvider) {
         this.transportDataJson = transportDataJson;
+        this.torrentTransporterProvider = torrentTransporterProvider;
         transporterWrapper = new ImmutableWrapper<>();
         transportDataWrapper = new ImmutableWrapper<>();
     }
@@ -55,7 +65,7 @@ public class TransportDataDeserializer {
         switch (transportType) {
             case TRANSPORT_TYPE_TORRENT_KEY:
                 transportDataWrapper.set(TorrentTransportData.fromJson(map.get(TRANSPORT_DATA_KEY)));
-                transporterWrapper.set(new TorrentTransporter(new NotificationSender(transportDataWrapper.get().getId())));
+                transporterWrapper.set(torrentTransporterProvider.get());
                 break;
             default:
                 throw new UnsupportedTransportType(String.format("Provided transport data type is unknown" +
