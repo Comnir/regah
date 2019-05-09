@@ -1,5 +1,6 @@
 package com.jefferson.regah.http;
 
+import com.jefferson.regah.TestUtils;
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
 import org.java_websocket.client.WebSocketClient;
 import org.junit.jupiter.api.AfterEach;
@@ -21,12 +22,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 class WebSocketServerTest {
-    private static final int SERVER_PORT = 42000;
+    private static int serverPort;
     private final ImmutableWrapper<WebSocketServer> serverWrapper = new ImmutableWrapper<>();
 
     @BeforeEach
     void setup() {
-        final InetSocketAddress address = new InetSocketAddress(InetAddress.getLoopbackAddress(), SERVER_PORT);
+        try {
+            serverPort = TestUtils.getAvailablePort();
+        } catch (IOException e) {
+            throw new AssertionError("PRE-CONDITION error", e);
+        }
+
+        final InetSocketAddress address = new InetSocketAddress(InetAddress.getLoopbackAddress(), serverPort);
         serverWrapper.set(new WebSocketServerBuilder().setAddress(address).createWebSocketServer());
         serverWrapper.get().start();
 
@@ -43,7 +50,7 @@ class WebSocketServerTest {
     @Test
     void test() throws URISyntaxException, InterruptedException {
         final BlockingQueue<String> queue = new ArrayBlockingQueue<>(1);
-        final WebSocketClient client = new WebSocketClientBuilder().setServerUri(new URI("ws://127.0.0.1:42000"))
+        final WebSocketClient client = new WebSocketClientBuilder().setServerUri(new URI("ws://127.0.0.1:" + serverPort))
                 .setOnMessageDelegate(queue::add
                 ).createNotificationClient();
 

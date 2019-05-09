@@ -1,5 +1,6 @@
 package com.jefferson.regah.notification;
 
+import com.jefferson.regah.TestUtils;
 import com.jefferson.regah.http.WebSocketClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -22,14 +24,19 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class NotificationBusTest {
     private static final Logger log = LogManager.getLogger(NotificationBusTest.class);
-    private static final int SERVER_PORT = 42000;
+    private static int serverPort;
 
-    private final InetSocketAddress address = new InetSocketAddress(InetAddress.getLoopbackAddress(), SERVER_PORT);
     private NotificationBus notificationBus;
 
     @BeforeEach
     void setup() {
-        notificationBus = new NotificationBus(address);
+        try {
+            serverPort = TestUtils.getAvailablePort();
+        } catch (IOException e) {
+            throw new AssertionError("PRE-CONDITION error", e);
+        }
+
+        notificationBus = new NotificationBus(new InetSocketAddress(InetAddress.getLoopbackAddress(), serverPort));
         notificationBus.start(); // fails asynchronously about every other time
         assertTrue(notificationBus.waitForStart(Duration.ofSeconds(3)), "Timed out waiting for notification bus.");
     }
@@ -52,7 +59,7 @@ class NotificationBusTest {
     void subscriberRecievsMessage() throws URISyntaxException, InterruptedException {
         final BlockingQueue<String> queue = new ArrayBlockingQueue<>(1);
         final String subscriptionId = "SOME_ID";
-        final WebSocketClient client = new WebSocketClientBuilder().setServerUri(new URI("ws://127.0.0.1:" + SERVER_PORT + "/subscribe/" + subscriptionId))
+        final WebSocketClient client = new WebSocketClientBuilder().setServerUri(new URI("ws://127.0.0.1:" + serverPort + "/subscribe/" + subscriptionId))
                 .setOnMessageDelegate(queue::add
                 ).createNotificationClient();
 
