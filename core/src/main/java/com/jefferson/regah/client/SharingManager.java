@@ -9,14 +9,14 @@ import java.io.IOException;
 import java.util.Map;
 
 public class SharingManager {
-    private final int serverPort = 42421;
     private final Server server;
     private final HttpHandler addHandler;
     private final HttpHandler downloadHandler;
 
     @Inject
     public SharingManager(@Named("addHandler") final HttpHandler addHandler,
-                          @Named("downloadHandler") final HttpHandler downloadHandler) throws IOException {
+                          @Named("downloadHandler") final HttpHandler downloadHandler,
+                          @Named("sharing-management-port") int serverPort) throws IOException {
         this.addHandler = addHandler;
         this.downloadHandler = downloadHandler;
         this.server = new Server(serverPort, "Sharing center management"); // TODO: inject

@@ -15,6 +15,7 @@ import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import org.junit.jupiter.api.*;
 
+import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,8 +35,12 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 class SharingServerTest {
-    private static final int SERVER_PORT = 42424;
-    private static final int MANAGEMENT_PORT = 42421;
+    @Inject
+    @Named("sharing-server-port")
+    private int SERVER_PORT;
+    @Inject
+    @Named("sharing-management-port")
+    private int MANAGEMENT_PORT;
     private static final Gson GSON = new Gson();
 
     private static Application application;

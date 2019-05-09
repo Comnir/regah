@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 @Singleton
 public class SharedResources {
     private static final Logger log = LogManager.getLogger(SharedResources.class);
-    final private Set<File> resources = new HashSet<>();
+    private final Set<File> resources = new HashSet<>();
 
     public Set<File> getResources() {
         if (resources.stream().anyMatch(f -> !f.exists())) {
