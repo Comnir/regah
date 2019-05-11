@@ -5,19 +5,15 @@ import org.apache.logging.log4j.Logger;
 
 import javax.inject.Singleton;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Singleton
 public class SharedResources {
     private static final Logger log = LogManager.getLogger(SharedResources.class);
     private final Set<File> resources = new HashSet<>();
+
 
     public Set<File> getResources() {
         if (resources.stream().anyMatch(f -> !f.exists())) {
@@ -26,19 +22,6 @@ public class SharedResources {
         return resources.stream()
                 .filter(File::exists)
                 .collect(Collectors.toSet());
-    }
-
-    private static Stream<? extends File> streamOfFiles(File file) {
-        if (!file.isDirectory()) {
-            return Stream.of(file);
-        }
-        try (final Stream<Path> ps = Files.walk(file.toPath())) {
-            return Arrays.stream(ps.toArray(Path[]::new))
-                    .map(Path::toFile);
-        } catch (IOException e) {
-            log.error("Failed to list files from " + file + " - " + e.getMessage());
-            throw new RuntimeException("Failed to list files in directory: " + file, e);
-        }
     }
 
     public void share(File file) {
