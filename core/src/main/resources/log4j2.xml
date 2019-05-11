@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="ERROR">
     <Properties>
-        <Property name="appenderPatternLayout">%d{HH:mm:ss.SSS} [%t] %l %-5level - %msg%n</Property>
+        <Property name="appenderPatternLayout">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %l %-5level - %msg%n</Property>
     </Properties>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">

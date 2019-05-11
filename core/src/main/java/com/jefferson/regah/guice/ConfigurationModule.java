@@ -11,8 +11,8 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Properties;
 
-public class ApplicationModule extends AbstractModule {
-    private static final Logger log = LogManager.getLogger(ApplicationModule.class);
+public class ConfigurationModule extends AbstractModule {
+    private static final Logger log = LogManager.getLogger(ConfigurationModule.class);
 
     @Override
     protected void configure() {

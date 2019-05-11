@@ -5,7 +5,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.jefferson.regah.client.handler.DownloadHandler;
-import com.jefferson.regah.guice.ApplicationModule;
+import com.jefferson.regah.guice.ConfigurationModule;
 import com.jefferson.regah.guice.HttpHandlersModule;
 import com.jefferson.regah.server.handler.HttpConstants;
 import com.jefferson.regah.transport.InvalidTransportData;
@@ -53,7 +53,7 @@ class SharingServerTest {
     static void startApplication() throws IOException {
         temporaryFolder = Files.createTempDirectory("regah-test");
 
-        injector = Guice.createInjector(Arrays.asList(new ApplicationModule(), new HttpHandlersModule()));
+        injector = Guice.createInjector(Arrays.asList(new ConfigurationModule(), new HttpHandlersModule()));
         application = injector.getInstance(Application.class);
 
         Runtime.getRuntime().addShutdownHook(new Thread(application::stop));

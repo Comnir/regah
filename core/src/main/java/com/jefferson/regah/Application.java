@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.jefferson.regah.client.SharingManager;
 import com.jefferson.regah.com.jefferson.jade.ImmutableWrapper;
-import com.jefferson.regah.guice.ApplicationModule;
+import com.jefferson.regah.guice.ConfigurationModule;
 import com.jefferson.regah.guice.HttpHandlersModule;
 import com.jefferson.regah.notification.NotificationBus;
 import com.jefferson.regah.server.SharingServer;
@@ -31,7 +31,7 @@ public class Application {
     }
 
     public static void main(String[] args) {
-        final Injector injector = Guice.createInjector(Arrays.asList(new ApplicationModule(), new HttpHandlersModule()));
+        final Injector injector = Guice.createInjector(Arrays.asList(new ConfigurationModule(), new HttpHandlersModule()));
         final Application application = injector.getInstance(Application.class);
 
         Runtime.getRuntime().addShutdownHook(new Thread(application::stop));
