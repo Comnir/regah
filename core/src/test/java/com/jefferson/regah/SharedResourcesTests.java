@@ -1,5 +1,6 @@
 package com.jefferson.regah;
 
+import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -7,6 +8,9 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class SharedResourcesTests {
 
@@ -112,7 +116,22 @@ class SharedResourcesTests {
 
         Assertions.assertTrue(
                 sharedResources.isShared(childFile),
-                String.format("A file should be considered 'shared' when it's parent is shared.")
+                "A file should be considered 'shared' when it's parent is shared."
         );
+    }
+
+    @Test
+    void throwsWhenNonAbsolutePathIsShared() {
+        final File file = new File("relativePath.txt");
+
+        try {
+            sharedResources.share(file);
+            fail("Should throw an exception when relative path is shared");
+        } catch (IllegalArgumentException e) {
+            assertThat("Exception message should address absolute vs. relative path", e.getMessage(), StringContains.containsString("absolute"));
+        } catch (Exception e) {
+            fail("Should throw an IllegalArgumentException");
+        }
+
     }
 }

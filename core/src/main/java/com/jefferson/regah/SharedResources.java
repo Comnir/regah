@@ -42,7 +42,12 @@ public class SharedResources {
     }
 
     public void share(File file) {
-        log.trace("New file shared: {}", file);
+        log.trace("File share requested: {}", file);
+
+        if (!file.isAbsolute()) {
+            throw new IllegalArgumentException("Shared file should have absolute path.");
+        }
+
         resources.add(file);
     }
 
