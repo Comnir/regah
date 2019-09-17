@@ -8,7 +8,7 @@ buildscript {
 
 plugins {
     id "net.ltgt.errorprone" version "0.6.1" // static analysis
-    id 'org.unbroken-dome.test-sets' version '1.4.5' // configure different test sets
+    id 'org.unbroken-dome.test-sets' version '2.1.1' // configure different test sets
 }
 
 group 'com.jefferson'
@@ -24,7 +24,7 @@ idea {
 }
 
 sourceCompatibility = 1.9
-ext.junitJupiterVersion  = '5.0.3'
+ext.junitJupiterVersion  = '5.5.0'
 mainClassName = 'com.jefferson.regah.Application'
 
 repositories {
@@ -75,6 +75,7 @@ dependencies {
     }
 
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+    testImplementation 'org.junit.platform:junit-platform-suite-api:1.5.0'
 }
 
 task copyLibs(type: Copy)  {
