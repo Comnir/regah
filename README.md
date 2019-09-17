@@ -44,8 +44,8 @@ from .git/hooks folder.
    1. ~~Java side~~
    1. ~~Electron side~~
    1. Store all log files in a single folder
-1. Use configuration files: ports, data folder, etc.
-1. Persist data: shared files, progress, etc.
+1. ~~Use configuration files: ports, data folder, etc.~~
+1. Persist data: ~~shared files~~, progress, etc.
 
 ### Feature-wise
 1. Improve download preparation: don't re-create download data for files which were previously download
