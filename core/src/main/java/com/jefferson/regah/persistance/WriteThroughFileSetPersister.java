@@ -3,10 +3,16 @@ package com.jefferson.regah.persistance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.nio.file.StandardOpenOption.APPEND;
 
 public class WriteThroughFileSetPersister implements FileSetPersister {
     private static final Logger log = LogManager.getLogger(WriteThroughFileSetPersister.class);
@@ -14,6 +20,12 @@ public class WriteThroughFileSetPersister implements FileSetPersister {
 
     public WriteThroughFileSetPersister(File dataFolder, String name) throws IOException {
         outputFile = new File(dataFolder, name + ".files.set");
+
+        if (!dataFolder.exists() && !dataFolder.mkdirs()) {
+            final String message = "Failed to create application data folder " + dataFolder;
+            log.error(message);
+            throw new IOException(message);
+        }
 
         if (!outputFile.exists() && !outputFile.createNewFile()) {
             final String message = "Failed to create file for persisting " + name;
@@ -28,9 +40,9 @@ public class WriteThroughFileSetPersister implements FileSetPersister {
     }
 
     private void addToPersisted(String path) throws IOException {
-        try (FileWriter fileWriter = new FileWriter(outputFile, true)) {
-            fileWriter.append(path);
-            fileWriter.append(System.lineSeparator());
+        try (Writer writer = Files.newBufferedWriter(outputFile.toPath(), StandardCharsets.UTF_8, APPEND)) {
+            writer.append(path);
+            writer.append(System.lineSeparator());
         }
     }
 
@@ -38,8 +50,8 @@ public class WriteThroughFileSetPersister implements FileSetPersister {
     public void remove(File t) throws IOException {
         final String toRemove = t.getAbsolutePath();
         final Set<String> toWrite;
-        try (Stream<String> fileReader = new BufferedReader(new FileReader(outputFile)).lines()) {
-            toWrite = fileReader.filter(path -> !toRemove.equals(path))
+        try (Stream<String> lines = Files.newBufferedReader(outputFile.toPath(), StandardCharsets.UTF_8).lines()) {
+            toWrite = lines.filter(path -> !toRemove.equals(path))
                     .collect(Collectors.toSet());
         }
 
@@ -54,8 +66,8 @@ public class WriteThroughFileSetPersister implements FileSetPersister {
 
     @Override
     public Set<File> getPersisted() throws IOException {
-        try (Stream<String> fileReader = new BufferedReader(new FileReader(outputFile)).lines()) {
-            return fileReader.map(File::new)
+        try (Stream<String> lines = Files.newBufferedReader(outputFile.toPath(), StandardCharsets.UTF_8).lines()) {
+            return lines.map(File::new)
                     .collect(Collectors.toSet());
         }
     }

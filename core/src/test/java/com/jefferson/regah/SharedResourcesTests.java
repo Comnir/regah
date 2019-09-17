@@ -1,20 +1,33 @@
 package com.jefferson.regah;
 
+import com.google.common.collect.ImmutableSet;
+import com.jefferson.regah.persistance.FileSetPersister;
+import com.jefferson.regah.persistance.WriteThroughFileSetPersister;
 import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class SharedResourcesTests {
 
     private SharedResources sharedResources;
+    private static File someFile;
+
+    @BeforeAll
+    static void setupAll() {
+        someFile = new File(SharedResourcesTests.class.getResource("/share/ForSharing.txt").getFile());
+    }
 
     @BeforeEach
     void setUp() {
@@ -34,7 +47,6 @@ class SharedResourcesTests {
     @Test
     void oneSharedFile() {
         final SharedResources sharedResources = new SharedResources();
-        final File someFile = new File(this.getClass().getResource("/share/ForSharing.txt").getFile());
         sharedResources.share(someFile);
 
         Assertions.assertEquals(1, sharedResources.getResources().size(),
@@ -44,7 +56,6 @@ class SharedResourcesTests {
     @Test
     void sharedFileHasSamePath() {
         final SharedResources sharedResources = new SharedResources();
-        final File someFile = new File(this.getClass().getResource("/share/ForSharing.txt").getFile());
         sharedResources.share(someFile);
 
         final File actualSharedFile = sharedResources.getResources().toArray(new File[0])[0];
@@ -55,7 +66,6 @@ class SharedResourcesTests {
     @Test
     void nothingSharedAfterFileIsUnshared() {
         final SharedResources sharedResources = new SharedResources();
-        final File someFile = new File(this.getClass().getResource("/share/ForSharing.txt").getFile());
         sharedResources.share(someFile);
 
         final File actualSharedFile = sharedResources.getResources().toArray(new File[0])[0];
@@ -133,5 +143,46 @@ class SharedResourcesTests {
             fail("Should throw an IllegalArgumentException");
         }
 
+    }
+
+    @Test
+    void persisterCalled_when_newFileIsShared(@TempDir File tempFolder) throws IOException {
+        final FileSetPersister persister = mock(WriteThroughFileSetPersister.class);
+        new SharedResources(persister).share(someFile);
+
+        verify(persister).add(someFile);
+    }
+
+    @Test
+    void persisterNotCalled_when_sameFileIsSharedTwice(@TempDir File tempFolder) throws IOException {
+        final FileSetPersister persister = mock(WriteThroughFileSetPersister.class);
+        final SharedResources sharedResources = new SharedResources(persister);
+        sharedResources.share(someFile);
+
+        final File anotherReferenceOfSomeFile = new File(someFile.getParent(), someFile.getName());
+        assertEquals(someFile.getAbsolutePath(), anotherReferenceOfSomeFile.getAbsolutePath());
+        sharedResources.share(anotherReferenceOfSomeFile);
+
+        verify(persister).add(anotherReferenceOfSomeFile);
+    }
+
+    @Test
+    void persisterCalled_when_unsharingFile(@TempDir File tempFolder) throws IOException {
+        final FileSetPersister persister = mock(WriteThroughFileSetPersister.class);
+        final SharedResources sharedResources = new SharedResources(persister);
+        sharedResources.share(someFile);
+
+        sharedResources.unshare(someFile);
+
+        verify(persister).remove(someFile);
+    }
+
+    @Test
+    void fileIsShared_when_fileIsInPersistedSharedFiles() throws IOException {
+        final FileSetPersister persister = mock(WriteThroughFileSetPersister.class);
+        when(persister.getPersisted()).thenReturn(ImmutableSet.of(someFile));
+        final SharedResources sharedResources = new SharedResources(persister);
+
+        assertTrue(sharedResources.isShared(someFile), "File should be shared");
     }
 }

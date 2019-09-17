@@ -1,5 +1,6 @@
 package com.jefferson.regah;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -14,6 +15,7 @@ import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.io.TempDir;
 
 import javax.inject.Named;
 import java.io.File;
@@ -46,14 +48,14 @@ class SharingServerTest {
     private static Application application;
     @Inject
     private SharedResources sharedResources;
-    private static Path temporaryFolder;
+
+    @TempDir
+    public static Path temporaryFolder;
     private static Injector injector;
 
     @BeforeAll
-    static void startApplication() throws IOException {
-        temporaryFolder = Files.createTempDirectory("regah-test");
-
-        injector = Guice.createInjector(Arrays.asList(new ConfigurationModule(), new HttpHandlersModule()));
+    static void startApplication() {
+        injector = Guice.createInjector(Arrays.asList(new ConfigurationModule(ImmutableMap.of(ConfigurationModule.APPLICATION_DATA_FOLDER, temporaryFolder.toString())), new HttpHandlersModule()));
         application = injector.getInstance(Application.class);
 
         Runtime.getRuntime().addShutdownHook(new Thread(application::stop));

@@ -10,6 +10,8 @@ import com.jefferson.regah.client.handler.DownloadHandler;
 import com.jefferson.regah.handler.ErrorWrappingHandler;
 import com.jefferson.regah.notification.NotificationBus;
 import com.jefferson.regah.notification.NotificationSender;
+import com.jefferson.regah.persistance.FileSetPersister;
+import com.jefferson.regah.persistance.WriteThroughFileSetPersister;
 import com.jefferson.regah.server.handler.ListResourcesHandler;
 import com.jefferson.regah.server.handler.PrepareResourceForDownloadHandler;
 import com.jefferson.regah.transport.Transporter;
@@ -18,6 +20,8 @@ import com.jefferson.regah.transport.torrent.TorrentTransporter;
 import com.sun.net.httpserver.HttpHandler;
 
 import javax.inject.Named;
+import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 
 public class HttpHandlersModule extends AbstractModule {
@@ -26,6 +30,7 @@ public class HttpHandlersModule extends AbstractModule {
         bind(InetAddress.class).annotatedWith(Names.named("loopback-address")).toInstance(InetAddress.getLoopbackAddress());
         bind(Transporter.class).to(TorrentTransporter.class);
         bind(NotificationSender.class).to(NotificationBus.class);
+//        bind(FileSetPersister.class).to(WriteThroughFileSetPersister.class);
         install(new FactoryModuleBuilder().build(TransportDataDeserializerFactory.class));
     }
 
@@ -51,5 +56,11 @@ public class HttpHandlersModule extends AbstractModule {
     @Named("downloadHandler")
     HttpHandler downloadHandler(TransportDataDeserializerFactory deserializerFactory) {
         return new ErrorWrappingHandler<>(new DownloadHandler(deserializerFactory));
+    }
+
+    @Provides
+    @Named("sharedFilesPersister")
+    FileSetPersister sharedFilesPersister(@Named("application-data-folder") String dataFolder) throws IOException {
+        return new WriteThroughFileSetPersister(new File(dataFolder), "shared");
     }
 }
