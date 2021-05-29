@@ -23,6 +23,6 @@
   },
   "dependencies": {
     "electron-log": "^3.0.1",
-    "ws": "^6.1.2"
+    "ws": "^7.4.6"
   }
 }
