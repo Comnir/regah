@@ -5,7 +5,7 @@ x
 
 (Will be, one day,) A file sharing service / application.
 
-## D plan
+## B plan
 <pre>
  ____________
 |            |======= Managment API (add/remove/list shared files)
