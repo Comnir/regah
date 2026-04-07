@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/Comnir/regah#readme",
   "devDependencies": {
-    "electron": "^24.1.2"
+    "electron": "^39.8.5"
   },
   "dependencies": {
     "electron-log": "^3.0.1",
